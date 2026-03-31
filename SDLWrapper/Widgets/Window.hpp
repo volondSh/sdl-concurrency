@@ -1,0 +1,26 @@
+#pragma once
+
+#include <string_view>
+
+struct SDL_Window;
+
+namespace sdl::widgets
+{
+  class Window final
+  {
+  public:
+    Window(std::string_view title, int width, int height, unsigned long long flags);
+    ~Window();
+
+    Window(const Window&)            = delete;
+    Window& operator=(const Window&) = delete;
+    Window(Window&&)                 = delete;
+    Window& operator=(Window&&)      = delete;
+
+    [[nodiscard]] bool valid() const noexcept;
+    [[nodiscard]] SDL_Window* native_handle() const noexcept;
+
+  private:
+    SDL_Window* m_pWindow = nullptr;
+  };
+}

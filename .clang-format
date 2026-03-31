@@ -1,0 +1,50 @@
+BasedOnStyle: LLVM
+Standard: c++20
+BreakBeforeBraces: Allman
+ColumnLimit: 120
+MaxEmptyLinesToKeep: 2
+ReflowComments: false
+UseTab: Never
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+IncludeCategories:
+  - Regex: '^".*'
+    Priority: 2
+  - Regex: '^<.*'
+    Priority: 3
+SortIncludes: CaseSensitive
+IncludeBlocks: Preserve
+IndentPPDirectives: AfterHash
+
+FixNamespaceComments: false
+NamespaceIndentation: All
+SortUsingDeclarations: true
+
+AlignConsecutiveAssignments: true
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeTernaryOperators: true
+PointerAlignment: Left
+DerivePointerAlignment: false
+ReferenceAlignment: Left
+
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+
+AlignAfterOpenBracket: AlwaysBreak
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortLambdasOnASingleLine: None
+BinPackArguments: false
+BinPackParameters: false
+
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+AllowAllConstructorInitializersOnNextLine: false
+ConstructorInitializerIndentWidth: 2
+
+AlwaysBreakTemplateDeclarations: true
+BreakInheritanceList: AfterColon
+PenaltyReturnTypeOnItsOwnLine: 500
+SeparateDefinitionBlocks: Always

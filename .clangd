@@ -1,0 +1,10 @@
+CompileFlags:
+  CompilationDatabase: .
+InlayHints:
+  ParameterNames: false
+  DeducedTypes: false
+  Designators: false
+Index:
+  Background: Build
+Hover:
+  ShowAKA: true

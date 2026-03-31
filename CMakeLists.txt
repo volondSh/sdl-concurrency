@@ -1,0 +1,121 @@
+cmake_minimum_required(VERSION 3.25)
+
+project(
+    sdl_concurrency
+    VERSION 0.1.0
+    DESCRIPTION "Modern C++ wrappers around SDL3 C API with concurrency experiments"
+    LANGUAGES CXX
+)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+option(ENABLE_CCACHE "Enable ccache compiler launcher when available" ON)
+option(BUILD_TESTS "Build tests" ON)
+
+if(ENABLE_CCACHE)
+    find_program(CCACHE_PROGRAM ccache)
+    if(CCACHE_PROGRAM)
+        message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
+        set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+        set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    else()
+        message(STATUS "ccache not found, continuing without compiler launcher")
+    endif()
+endif()
+
+include(cmake/CPM.cmake)
+
+if(CMAKE_EXPORT_COMPILE_COMMANDS)
+    add_custom_target(sync_compile_commands ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_BINARY_DIR}/compile_commands.json"
+            "${CMAKE_SOURCE_DIR}/compile_commands.json"
+        COMMENT "Copy compile_commands.json to project root"
+        VERBATIM
+    )
+endif()
+
+CPMAddPackage(
+    NAME spdlog
+    GITHUB_REPOSITORY gabime/spdlog
+    VERSION 1.14.1
+    OPTIONS
+        "SPDLOG_BUILD_EXAMPLE OFF"
+        "SPDLOG_BUILD_TESTS OFF"
+        "SPDLOG_BUILD_BENCH OFF"
+        "SPDLOG_BUILD_SHARED OFF"
+)
+
+CPMAddPackage(
+    NAME SDL3
+    GITHUB_REPOSITORY libsdl-org/SDL
+    GIT_TAG release-3.2.10
+    OPTIONS
+        "SDL_TEST_LIBRARY OFF"
+        "SDL_TESTS OFF"
+)
+
+if(BUILD_TESTS)
+    CPMAddPackage(
+        NAME GTest
+        GITHUB_REPOSITORY google/googletest
+        VERSION 1.15.2
+        OPTIONS "INSTALL_GTEST OFF"
+    )
+endif()
+
+add_subdirectory(App)
+add_subdirectory(SDLWrapper)
+
+add_executable(sdlc_app
+    src/main.cpp
+)
+
+target_link_libraries(sdlc_app 
+    PRIVATE 
+        App
+        SDLWrapper
+)
+
+if(TARGET sync_compile_commands)
+    add_dependencies(sdlc_app sync_compile_commands)
+endif()
+
+if(WIN32)
+    add_custom_command(TARGET sdlc_app POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:sdlc_app> $<TARGET_RUNTIME_DLLS:sdlc_app>
+        COMMAND_EXPAND_LISTS
+    )
+endif()
+
+if(BUILD_TESTS)
+    include(CTest)
+    enable_testing()
+
+    add_executable(sdlc_tests
+        tests/sdl_context_test.cpp
+    )
+
+    target_link_libraries(sdlc_tests
+        PRIVATE
+            SDLWrapper
+            GTest::gtest_main
+    )
+
+    if(WIN32)
+        add_custom_command(TARGET sdlc_tests POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:sdlc_tests> $<TARGET_RUNTIME_DLLS:sdlc_tests>
+            COMMAND_EXPAND_LISTS
+        )
+    endif()
+
+    if(TARGET sync_compile_commands)
+        add_dependencies(sdlc_tests sync_compile_commands)
+    endif()
+
+    include(GoogleTest)
+    gtest_discover_tests(sdlc_tests)
+endif()

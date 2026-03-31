@@ -1,0 +1,12 @@
+# Build artifacts
+build/
+bin/
+compile_commands.json
+
+# IDE files
+.vscode/
+.cursor/
+.cache/
+
+# Other
+notes/
