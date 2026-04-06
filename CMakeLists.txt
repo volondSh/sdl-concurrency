@@ -52,7 +52,7 @@ CPMAddPackage(
 CPMAddPackage(
     NAME SDL3
     GITHUB_REPOSITORY libsdl-org/SDL
-    GIT_TAG release-3.2.10
+    GIT_TAG release-3.4.4
     OPTIONS
         "SDL_TEST_LIBRARY OFF"
         "SDL_TESTS OFF"
@@ -68,7 +68,7 @@ if(BUILD_TESTS)
     CPMAddPackage(
         NAME GTest
         GITHUB_REPOSITORY google/googletest
-        VERSION 1.15.2
+        VERSION 1.17.0
         OPTIONS "INSTALL_GTEST OFF"
     )
 endif()
