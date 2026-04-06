@@ -58,6 +58,12 @@ CPMAddPackage(
         "SDL_TESTS OFF"
 )
 
+CPMAddPackage(
+    NAME nlohmann_json
+    GITHUB_REPOSITORY nlohmann/json
+    VERSION 3.12.0
+)
+
 if(BUILD_TESTS)
     CPMAddPackage(
         NAME GTest

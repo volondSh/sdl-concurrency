@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string_view>
 
 struct SDL_Window;
@@ -9,7 +10,7 @@ namespace sdl::widgets
   class Window final
   {
   public:
-    Window(std::string_view title, int width, int height, unsigned long long flags);
+    explicit Window(std::string_view title, int width, int height, std::uint64_t flags);
     ~Window();
 
     Window(const Window&)            = delete;
@@ -23,4 +24,6 @@ namespace sdl::widgets
   private:
     SDL_Window* m_pWindow = nullptr;
   };
+
+  std::uint64_t convertWindowSettingsToFlags(bool resizable, bool fullscreen);
 }

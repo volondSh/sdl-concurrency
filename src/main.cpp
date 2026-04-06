@@ -1,15 +1,16 @@
+#include <App/Logger.hpp>
 #include <App/Application.hpp>
+#include <App/ConfigManager.hpp>
 
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
+#include <filesystem>
+#include <memory>
 
-int main()
+int main(int argc, char* argv[])
 {
-  auto logger = spdlog::stdout_color_mt("console");
-  logger->set_pattern("[%H:%M:%S.%e] [%^%l%$] [%s:%#] [%!] %v");
-  spdlog::set_default_logger(logger);
-  spdlog::set_level(spdlog::level::trace);
+  auto pConfigManager =
+      std::make_unique<app::ConfigManager>(std::filesystem::canonical(argv[0]).parent_path() / "app_config.json");
+  auto pLogger = app::createLogger(app::convertLogLevel(pConfigManager->loggingLevel()));
 
-  auto app = app::Application{};
+  auto app = app::Application{std::move(pConfigManager)};
   return app.exec();
 }
