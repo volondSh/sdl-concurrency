@@ -19,7 +19,7 @@ namespace sdl::core
   class EventLoop
   {
   public:
-    explicit EventLoop(const sdl::widgets::Window&);
+    explicit EventLoop(sdl::widgets::Window&);
     ~EventLoop();
 
     EventLoop(const EventLoop&)            = delete;
@@ -30,7 +30,7 @@ namespace sdl::core
     void run();
 
   private:
-    const sdl::widgets::Window& m_mainWindow;
+    sdl::widgets::Window& m_mainWindow;
     Renderer m_renderer;
     entt::registry m_registry;
 

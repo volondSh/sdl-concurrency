@@ -50,6 +50,7 @@ The current demo renders 2500 randomly placed monochrome stars as points on a bl
 - Star positions are generated procedurally using `std::mt19937`
 - Each star has `Position` and `Color` ECS components
 - Render loop is delta-time capped for consistent frame rate
+- Press `F11` to toggle fullscreen mode (stars regenerate to fill the new resolution)
 - Press `Escape` or close the window to exit
 
 ## Dependencies

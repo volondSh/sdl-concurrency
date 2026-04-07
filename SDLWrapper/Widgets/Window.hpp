@@ -27,8 +27,11 @@ namespace sdl::widgets
     void setHeight(int);
     [[nodiscard]] int height() const;
 
+    void toggleFullscreen();
+
   private:
     SDL_Window* m_pWindow = nullptr;
+    bool m_isFullscreen   = false;
   };
 
   std::uint64_t convertWindowSettingsToFlags(bool resizable, bool fullscreen);

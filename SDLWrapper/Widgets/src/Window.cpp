@@ -25,6 +25,7 @@ namespace
 
 Window::Window(std::string_view title, int width, int height, std::uint64_t flags)
   : m_pWindow{SDL_CreateWindow(title.data(), width, height, flags)}
+  , m_isFullscreen{(flags & SDL_WINDOW_FULLSCREEN) != 0}
 {
   if (!m_pWindow)
     SPDLOG_ERROR("Failed to create SDL window: {}", SDL_GetError());
@@ -67,6 +68,12 @@ void Window::setHeight(int height)
 int Window::height() const
 {
   return windowSize(m_pWindow).second;
+}
+
+void Window::toggleFullscreen()
+{
+  m_isFullscreen = !m_isFullscreen;
+  SDL_SetWindowFullscreen(m_pWindow, m_isFullscreen);
 }
 
 std::uint64_t sdl::widgets::convertWindowSettingsToFlags(bool resizable, bool fullscreen)

@@ -20,7 +20,7 @@ constexpr auto c_minStarBrightness = 100;
 constexpr auto c_maxStarBrightness = 255;
 constexpr auto c_blackColor        = SDL_Color{.r = 0, .g = 0, .b = 0, .a = 255};
 
-EventLoop::EventLoop(const sdl::widgets::Window& window) : m_mainWindow{window}, m_renderer{window}
+EventLoop::EventLoop(sdl::widgets::Window& window) : m_mainWindow{window}, m_renderer{window}
 {
   createStars(c_starsCount);
 }
@@ -61,6 +61,13 @@ void EventLoop::handleEvents(bool& running)
       running = false;
     if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE)
       running = false;
+    if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_F11)
+      m_mainWindow.toggleFullscreen();
+    if (event.type == SDL_EVENT_WINDOW_RESIZED)
+    {
+      m_registry.clear();
+      createStars(c_starsCount);
+    }
   }
 }
 
