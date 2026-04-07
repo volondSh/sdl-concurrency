@@ -52,6 +52,22 @@ TEST(ColorComponent, ValueInitialization)
   EXPECT_EQ(color.color.a, 255);
 }
 
+TEST(VelocityComponent, DefaultInitialization)
+{
+  const auto vel = Velocity{};
+
+  EXPECT_FLOAT_EQ(vel.dx, 0.f);
+  EXPECT_FLOAT_EQ(vel.dy, 0.f);
+}
+
+TEST(VelocityComponent, ValueInitialization)
+{
+  const auto vel = Velocity{.dx = 10.f, .dy = -5.f};
+
+  EXPECT_FLOAT_EQ(vel.dx, 10.f);
+  EXPECT_FLOAT_EQ(vel.dy, -5.f);
+}
+
 TEST(EcsRegistry, CanCreateEntityWithPositionAndColor)
 {
   auto registry     = entt::registry{};
@@ -107,4 +123,85 @@ TEST(EcsRegistry, DestroyedEntityNotInView)
       });
 
   EXPECT_EQ(count, 0);
+}
+
+TEST(MovementSystem, UpdatesPositionBasedOnVelocity)
+{
+  auto registry = entt::registry{};
+  const auto entity = registry.create();
+  registry.emplace<ecs::Position>(entity, 100.f, 100.f);
+  registry.emplace<ecs::Velocity>(entity, 50.f, -30.f);
+
+  const auto dt = 0.5f;
+  auto view = registry.view<ecs::Position, ecs::Velocity>();
+  for (auto [ent, pos, vel] : view.each())
+  {
+    pos.x += vel.dx * dt;
+    pos.y += vel.dy * dt;
+  }
+
+  const auto& pos = registry.get<ecs::Position>(entity);
+  EXPECT_FLOAT_EQ(pos.x, 125.f);
+  EXPECT_FLOAT_EQ(pos.y, 85.f);
+}
+
+TEST(MovementSystem, OnlyAffectsEntitiesWithBothComponents)
+{
+  auto registry = entt::registry{};
+
+  const auto stationary = registry.create();
+  registry.emplace<ecs::Position>(stationary, 100.f, 100.f);
+
+  const auto moving = registry.create();
+  registry.emplace<ecs::Position>(moving, 100.f, 100.f);
+  registry.emplace<ecs::Velocity>(moving, 100.f, 0.f);
+
+  const auto dt = 1.f;
+  registry.view<ecs::Position, ecs::Velocity>().each(
+      [dt](ecs::Position& pos, const ecs::Velocity& vel)
+      {
+        pos.x += vel.dx * dt;
+        pos.y += vel.dy * dt;
+      });
+
+  const auto& stationaryPos = registry.get<ecs::Position>(stationary);
+  const auto& movingPos = registry.get<ecs::Position>(moving);
+
+  EXPECT_FLOAT_EQ(stationaryPos.x, 100.f);
+  EXPECT_FLOAT_EQ(movingPos.x, 200.f);
+}
+
+TEST(MovementSystem, WrapsAroundWindowBounds)
+{
+  auto registry          = entt::registry{};
+  const auto entity      = registry.create();
+  registry.emplace<ecs::Position>(entity, 790.f, 550.f);
+  registry.emplace<ecs::Velocity>(entity, 100.f, 100.f);
+
+  const auto windowWidth  = 800.f;
+  const auto windowHeight = 600.f;
+  const auto dt           = 1.f;
+  const auto epsilon      = 1e-6f;
+
+  auto view = registry.view<ecs::Position, ecs::Velocity>();
+  for (auto [ent, pos, vel] : view.each())
+  {
+    pos.x += vel.dx * dt;
+    pos.y += vel.dy * dt;
+
+    if (pos.x < -epsilon)
+      pos.x += windowWidth;
+    else if (pos.x + epsilon >= windowWidth)
+      pos.x -= windowWidth;
+
+    if (pos.y < -epsilon)
+      pos.y += windowHeight;
+    else if (pos.y + epsilon >= windowHeight)
+      pos.y -= windowHeight;
+  }
+
+  const auto& pos = registry.get<ecs::Position>(entity);
+  
+  EXPECT_FLOAT_EQ(pos.x, 90.f);
+  EXPECT_FLOAT_EQ(pos.y, 50.f);
 }
