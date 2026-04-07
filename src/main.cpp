@@ -3,14 +3,12 @@
 #include <App/ConfigManager.hpp>
 
 #include <filesystem>
-#include <memory>
 
 int main(int argc, char* argv[])
 {
-  auto pConfigManager =
-      std::make_unique<app::ConfigManager>(std::filesystem::canonical(argv[0]).parent_path() / "app_config.json");
-  auto pLogger = app::createLogger(app::convertLogLevel(pConfigManager->loggingLevel()));
+  auto configManager = app::ConfigManager{std::filesystem::canonical(argv[0]).parent_path() / "app_config.json"};
+  auto pLogger       = app::createLogger(app::convertLogLevel(configManager.loggingLevel()));
 
-  auto app = app::Application{std::move(pConfigManager)};
+  auto app = app::Application{configManager};
   return app.exec();
 }

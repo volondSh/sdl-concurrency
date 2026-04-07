@@ -19,7 +19,13 @@ namespace sdl::widgets
     Window& operator=(Window&&)      = delete;
 
     [[nodiscard]] bool valid() const noexcept;
-    [[nodiscard]] SDL_Window* native_handle() const noexcept;
+    [[nodiscard]] SDL_Window* nativeHandle() const noexcept;
+
+    void setWidth(int);
+    [[nodiscard]] int width() const;
+
+    void setHeight(int);
+    [[nodiscard]] int height() const;
 
   private:
     SDL_Window* m_pWindow = nullptr;

@@ -11,22 +11,22 @@ using namespace sdl::core;
 using namespace sdl::widgets;
 using namespace app;
 
-Application::Application(std::unique_ptr<ConfigManager> pConfigManager)
+Application::Application(ConfigManager& configManager)
   : m_context{SDL_INIT_EVENTS | SDL_INIT_VIDEO},
     m_mainWindow{
         "sdl-concurrency",
-        pConfigManager->windowWidth(),
-        pConfigManager->windowHeight(),
-        convertWindowSettingsToFlags(pConfigManager->windowResizable(), pConfigManager->windowFullscreen())},
-    m_pConfigManager{std::move(pConfigManager)}
+        configManager.windowWidth(),
+        configManager.windowHeight(),
+        convertWindowSettingsToFlags(configManager.windowResizable(), configManager.windowFullscreen())},
+    m_eventLoop{m_mainWindow},
+    m_configManager{configManager}
 {
 }
 
 Application::~Application()
 {
-  if(!m_pConfigManager->save())
+  if (!m_configManager.save())
     SPDLOG_ERROR("Unable to save config");
-
 }
 
 bool Application::ready() const noexcept
@@ -48,6 +48,6 @@ int Application::exec()
   }
 
   SPDLOG_INFO("SDL window created. Close window or press Escape to exit.");
-  m_eventLoop.run(nullptr);
+  m_eventLoop.run();
   return 0;
 }

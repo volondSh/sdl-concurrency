@@ -1,14 +1,42 @@
 #pragma once
 
-#include <functional>
+#include "Renderer.hpp"
+
+#include <entt/entt.hpp>
+
+namespace app
+{
+  class ConfigManager;
+}
+
+namespace sdl::widgets
+{
+  class Window;
+}
 
 namespace sdl::core
 {
-  class EventLoop final
+  class EventLoop
   {
   public:
-    using TickCallback = std::function<void()>;
+    explicit EventLoop(const sdl::widgets::Window&);
+    ~EventLoop();
 
-    void run(const TickCallback&);
+    EventLoop(const EventLoop&)            = delete;
+    EventLoop& operator=(const EventLoop&) = delete;
+    EventLoop(EventLoop&&)                 = delete;
+    EventLoop& operator=(EventLoop&&)      = delete;
+
+    void run();
+
+  private:
+    const sdl::widgets::Window& m_mainWindow;
+    Renderer m_renderer;
+    entt::registry m_registry;
+
+    void createStars(int count);
+    void renderStars();
+
+    void handleEvents(bool& running);
   };
 }

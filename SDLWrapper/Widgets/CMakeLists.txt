@@ -11,5 +11,4 @@ target_link_libraries(SDLWrapperWidgets
     PUBLIC
         spdlog::spdlog
         SDL3::SDL3
-        SDLWrapperCore
 )

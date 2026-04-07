@@ -1,6 +1,7 @@
 add_library(SDLWrapperCore STATIC
     src/Context.cpp
     src/EventLoop.cpp
+    src/Renderer.cpp
 )
 
 target_include_directories(SDLWrapperCore
@@ -12,4 +13,6 @@ target_link_libraries(SDLWrapperCore
     PUBLIC
         spdlog::spdlog
         SDL3::SDL3
+        EnTT::EnTT
+        ECS
 )

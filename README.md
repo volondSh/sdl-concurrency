@@ -35,17 +35,49 @@ ctest --preset test-linux-clang-release
 ```
 
 ## Features
+
 - Modern C++23 codebase
 - Object-oriented wrappers for SDL3
+- ECS-based rendering with EnTT
 - Concurrency experiments and multithreading patterns
-- Configurable application settings
+- Configurable application settings (JSON config)
 - Logging with spdlog
 
+## Demo: Starfield
+
+The current demo renders 2500 randomly placed monochrome stars as points on a black background at 60 FPS:
+
+- Star positions are generated procedurally using `std::mt19937`
+- Each star has `Position` and `Color` ECS components
+- Render loop is delta-time capped for consistent frame rate
+- Press `Escape` or close the window to exit
+
 ## Dependencies
-- SDL3
-- spdlog
-- nlohmann/json
-- GoogleTest (for tests)
+
+Managed automatically via [CPM.cmake](cmake/CPM.cmake):
+
+| Library | Version | Purpose |
+|---|---|---|
+| [SDL3](https://github.com/libsdl-org/SDL) | 3.4.4 | Graphics, events, windowing |
+| [spdlog](https://github.com/gabime/spdlog) | 1.14.1 | Logging |
+| [EnTT](https://github.com/skypgart/entt) | 3.16.0 | Entity-Component-System |
+| [nlohmann/json](https://github.com/nlohmann/json) | 3.12.0 | JSON configuration |
+| [GoogleTest](https://github.com/google/googletest) | 1.17.0 | Unit testing |
+
+### Build-time options
+
+| Option | Default | Description |
+|---|---|---|
+| `BUILD_TESTS` | `ON` | Build GoogleTest unit tests |
+| `ENABLE_CCACHE` | `ON` | Enable ccache compiler launcher |
+
+## Build requirements
+
+- **CMake** ≥ 3.25
+- **C++23** compiler (GCC 13+, clang 17+)
+- **Ninja** build system
+- **ccache** (optional, speeds up rebuilds)
 
 ## License
+
 This project is licensed under the MIT License - see the [LICENSE file](LICENSE) for details.

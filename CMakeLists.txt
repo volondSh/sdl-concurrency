@@ -64,6 +64,12 @@ CPMAddPackage(
     VERSION 3.12.0
 )
 
+CPMAddPackage(
+    NAME EnTT
+    GITHUB_REPOSITORY skypjack/entt
+    VERSION 3.16.0
+)
+
 if(BUILD_TESTS)
     CPMAddPackage(
         NAME GTest
@@ -75,6 +81,7 @@ endif()
 
 add_subdirectory(App)
 add_subdirectory(SDLWrapper)
+add_subdirectory(ECS)
 
 add_executable(sdlc_app
     src/main.cpp
@@ -84,6 +91,7 @@ target_link_libraries(sdlc_app
     PRIVATE 
         App
         SDLWrapper
+        ECS
 )
 
 if(TARGET sync_compile_commands)
@@ -103,11 +111,13 @@ if(BUILD_TESTS)
 
     add_executable(sdlc_tests
         tests/sdl_context_test.cpp
+        tests/ecs_components_test.cpp
     )
 
     target_link_libraries(sdlc_tests
         PRIVATE
             SDLWrapper
+            ECS
             GTest::gtest_main
     )
 
