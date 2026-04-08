@@ -4,6 +4,8 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_video.h>
+#include <SDLWrapper/Core/EventLoop.hpp>
+
 
 #include <spdlog/spdlog.h>
 
@@ -18,7 +20,17 @@ Application::Application(ConfigManager& configManager)
         configManager.windowWidth(),
         configManager.windowHeight(),
         convertWindowSettingsToFlags(configManager.windowResizable(), configManager.windowFullscreen())},
-    m_eventLoop{m_mainWindow},
+    m_eventLoop{
+        m_mainWindow,
+        SceneConfig{
+            .totalStars      = configManager.totalStars(),
+            .movingStars     = configManager.movingStars(),
+            .worldWidth      = configManager.worldWidth(),
+            .worldHeight     = configManager.worldHeight(),
+            .cameraPanSpeed  = configManager.cameraPanSpeed(),
+            .cameraZoomSpeed = configManager.cameraZoomSpeed(),
+            .cameraZoomMin   = configManager.cameraZoomMin(),
+            .cameraZoomMax   = configManager.cameraZoomMax()}},
     m_configManager{configManager}
 {
 }

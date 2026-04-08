@@ -25,6 +25,20 @@ namespace app
     void setWindowHeight(int height);
     void setWindowFullscreen(bool fullscreen);
 
+    [[nodiscard]] int totalStars() const;
+    [[nodiscard]] int movingStars() const;
+    [[nodiscard]] float worldWidth() const;
+    [[nodiscard]] float worldHeight() const;
+    [[nodiscard]] float cameraPanSpeed() const;
+    [[nodiscard]] float cameraZoomSpeed() const;
+    [[nodiscard]] float cameraZoomMin() const;
+    [[nodiscard]] float cameraZoomMax() const;
+
+    void setTotalStars(int count);
+    void setMovingStars(int count);
+    void setWorldWidth(float width);
+    void setWorldHeight(float height);
+
   private:
     std::filesystem::path m_configPath;
     nlohmann::json m_config;

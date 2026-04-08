@@ -45,11 +45,32 @@ ctest --preset test-linux-clang-release
 
 ## Demo: Starfield
 
-The current demo renders 2500 randomly placed monochrome stars as points on a black background at 60 FPS in a 4000×4000 world:
+The current demo renders stars as monochrome points on a black background at 60 FPS. All parameters are configurable in `app_config.json` under the `scene` section:
 
-- Star positions are generated procedurally using `std::mt19937`
+```json
+{
+  "scene": {
+    "objects": {
+      "total": 2500,
+      "moving": 200
+    },
+    "worldSize": {
+      "width": 4000.0,
+      "height": 4000.0
+    },
+    "camera": {
+      "panSpeed": 300.0,
+      "zoomSpeed": 1.05,
+      "zoomMin": 0.1,
+      "zoomMax": 5.0
+    }
+  }
+}
+```
+
+- Star positions are generated procedurally using `std::mt19937` within `worldWidth × worldHeight` centered at (0, 0)
 - Each star has `Position` and `Color` ECS components
-- 500 stars have a `Velocity` component and drift at 5–30 pixels/second in random directions
+- Moving stars have a `Velocity` component and drift at 5–30 pixels/second in random directions
 - Stars wrap around world edges — they reappear on the opposite side when leaving the world boundary
 
 ### Controls

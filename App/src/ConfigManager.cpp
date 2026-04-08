@@ -10,12 +10,20 @@ namespace
 {
   nlohmann::json defaultConfig()
   {
-    auto defaults                    = nlohmann::json::object();
-    defaults["window"]["width"]      = 1280;
-    defaults["window"]["height"]     = 720;
-    defaults["window"]["resizable"]  = true;
-    defaults["window"]["fullscreen"] = false;
-    defaults["logging"]["level"]     = "off";
+    auto defaults                            = nlohmann::json::object();
+    defaults["window"]["width"]              = 1280;
+    defaults["window"]["height"]             = 720;
+    defaults["window"]["resizable"]          = true;
+    defaults["window"]["fullscreen"]         = false;
+    defaults["logging"]["level"]             = "off";
+    defaults["scene"]["objects"]["total"]    = 2500;
+    defaults["scene"]["objects"]["moving"]   = 200;
+    defaults["scene"]["worldSize"]["width"]  = 4000.f;
+    defaults["scene"]["worldSize"]["height"] = 4000.f;
+    defaults["scene"]["camera"]["panSpeed"]  = 300.f;
+    defaults["scene"]["camera"]["zoomSpeed"] = 1.05f;
+    defaults["scene"]["camera"]["zoomMin"]   = 0.1f;
+    defaults["scene"]["camera"]["zoomMax"]   = 5.f;
     return defaults;
   }
 
@@ -41,7 +49,43 @@ namespace
       return false;
 
     const auto& logging = config["logging"];
-    return logging.contains("level") && logging["level"].is_string();
+    if (!logging.contains("level") || !logging["level"].is_string())
+      return false;
+
+    if (config.contains("scene"))
+    {
+      const auto& scene = config["scene"];
+      if (scene.contains("objects"))
+      {
+        const auto& objects = scene["objects"];
+        if (objects.contains("total") && !objects["total"].is_number())
+          return false;
+        if (objects.contains("moving") && !objects["moving"].is_number())
+          return false;
+      }
+      if (scene.contains("worldSize"))
+      {
+        const auto& worldSize = scene["worldSize"];
+        if (worldSize.contains("width") && !worldSize["width"].is_number())
+          return false;
+        if (worldSize.contains("height") && !worldSize["height"].is_number())
+          return false;
+      }
+      if (scene.contains("camera"))
+      {
+        const auto& camera = scene["camera"];
+        if (camera.contains("panSpeed") && !camera["panSpeed"].is_number())
+          return false;
+        if (camera.contains("zoomSpeed") && !camera["zoomSpeed"].is_number())
+          return false;
+        if (camera.contains("zoomMin") && !camera["zoomMin"].is_number())
+          return false;
+        if (camera.contains("zoomMax") && !camera["zoomMax"].is_number())
+          return false;
+      }
+    }
+
+    return true;
   }
 }
 
@@ -151,4 +195,64 @@ void ConfigManager::setWindowHeight(int height)
 void ConfigManager::setWindowFullscreen(bool fullscreen)
 {
   m_config["window"]["fullscreen"] = fullscreen;
+}
+
+int ConfigManager::totalStars() const
+{
+  return m_config["scene"]["objects"]["total"].get<int>();
+}
+
+int ConfigManager::movingStars() const
+{
+  return m_config["scene"]["objects"]["moving"].get<int>();
+}
+
+float ConfigManager::worldWidth() const
+{
+  return m_config["scene"]["worldSize"]["width"].get<float>();
+}
+
+float ConfigManager::worldHeight() const
+{
+  return m_config["scene"]["worldSize"]["height"].get<float>();
+}
+
+void ConfigManager::setTotalStars(int count)
+{
+  m_config["scene"]["objects"]["total"] = count;
+}
+
+void ConfigManager::setMovingStars(int count)
+{
+  m_config["scene"]["objects"]["moving"] = count;
+}
+
+void ConfigManager::setWorldWidth(float width)
+{
+  m_config["scene"]["worldSize"]["width"] = width;
+}
+
+void ConfigManager::setWorldHeight(float height)
+{
+  m_config["scene"]["worldSize"]["height"] = height;
+}
+
+float ConfigManager::cameraPanSpeed() const
+{
+  return m_config["scene"]["camera"]["panSpeed"].get<float>();
+}
+
+float ConfigManager::cameraZoomSpeed() const
+{
+  return m_config["scene"]["camera"]["zoomSpeed"].get<float>();
+}
+
+float ConfigManager::cameraZoomMin() const
+{
+  return m_config["scene"]["camera"]["zoomMin"].get<float>();
+}
+
+float ConfigManager::cameraZoomMax() const
+{
+  return m_config["scene"]["camera"]["zoomMax"].get<float>();
 }

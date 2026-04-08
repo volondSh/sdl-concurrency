@@ -10,7 +10,7 @@ namespace ecs
   {
     constexpr auto epsilon = 1e-6f;
     const auto view        = reg.view<Position, Velocity>();
-    for (const auto& [entity, pos, vel] : view.each())
+    for (const auto& [_, pos, vel] : view.each())
     {
       pos.x += vel.dx * dt;
       pos.y += vel.dy * dt;
@@ -36,7 +36,7 @@ namespace ecs
     const auto halfH = static_cast<float>(windowHeight) * 0.5f;
 
     auto view = reg.view<Position, ScreenPosition>();
-    for (const auto& [entity, pos, screenPos] : view.each())
+    for (const auto& [_, pos, screenPos] : view.each())
     {
       screenPos.x = static_cast<int>(((pos.x - camera.x) * camera.zoom) + halfW);
       screenPos.y = static_cast<int>(((pos.y - camera.y) * camera.zoom) + halfH);
