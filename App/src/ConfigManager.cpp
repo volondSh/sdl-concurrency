@@ -137,3 +137,18 @@ std::string ConfigManager::loggingLevel() const
 {
   return m_config["logging"]["level"].get<std::string>();
 }
+
+void ConfigManager::setWindowWidth(int width)
+{
+  m_config["window"]["width"] = width;
+}
+
+void ConfigManager::setWindowHeight(int height)
+{
+  m_config["window"]["height"] = height;
+}
+
+void ConfigManager::setWindowFullscreen(bool fullscreen)
+{
+  m_config["window"]["fullscreen"] = fullscreen;
+}

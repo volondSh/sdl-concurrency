@@ -24,8 +24,10 @@ namespace
 }
 
 Window::Window(std::string_view title, int width, int height, std::uint64_t flags)
-  : m_pWindow{SDL_CreateWindow(title.data(), width, height, flags)}
-  , m_isFullscreen{(flags & SDL_WINDOW_FULLSCREEN) != 0}
+  : m_pWindow{SDL_CreateWindow(title.data(), width, height, flags)},
+    m_fullscreen{(flags & SDL_WINDOW_FULLSCREEN) != 0},
+    m_windowedWidth{width},
+    m_windowedHeight{height}
 {
   if (!m_pWindow)
     SPDLOG_ERROR("Failed to create SDL window: {}", SDL_GetError());
@@ -72,8 +74,35 @@ int Window::height() const
 
 void Window::toggleFullscreen()
 {
-  m_isFullscreen = !m_isFullscreen;
-  SDL_SetWindowFullscreen(m_pWindow, m_isFullscreen);
+  if (!m_fullscreen)
+    updateRestoreSize(windowSize(m_pWindow).first, windowSize(m_pWindow).second);
+
+  m_fullscreen = !m_fullscreen;
+  SDL_SetWindowFullscreen(m_pWindow, m_fullscreen);
+
+  if (!m_fullscreen)
+    SDL_SetWindowSize(m_pWindow, m_windowedWidth, m_windowedHeight);
+}
+
+bool Window::fullscreen() const
+{
+  return m_fullscreen;
+}
+
+int Window::restoreWidth() const
+{
+  return m_windowedWidth;
+}
+
+int Window::restoreHeight() const
+{
+  return m_windowedHeight;
+}
+
+void Window::updateRestoreSize(int width, int height)
+{
+  m_windowedWidth  = width;
+  m_windowedHeight = height;
 }
 
 std::uint64_t sdl::widgets::convertWindowSettingsToFlags(bool resizable, bool fullscreen)

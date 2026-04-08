@@ -25,6 +25,10 @@ Application::Application(ConfigManager& configManager)
 
 Application::~Application()
 {
+  m_configManager.setWindowWidth(m_mainWindow.restoreWidth());
+  m_configManager.setWindowHeight(m_mainWindow.restoreHeight());
+  m_configManager.setWindowFullscreen(m_mainWindow.fullscreen());
+
   if (!m_configManager.save())
     SPDLOG_ERROR("Unable to save config");
 }

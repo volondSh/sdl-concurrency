@@ -21,6 +21,10 @@ namespace app
     [[nodiscard]] bool windowFullscreen() const;
     [[nodiscard]] std::string loggingLevel() const;
 
+    void setWindowWidth(int width);
+    void setWindowHeight(int height);
+    void setWindowFullscreen(bool fullscreen);
+
   private:
     std::filesystem::path m_configPath;
     nlohmann::json m_config;

@@ -103,6 +103,9 @@ void EventLoop::handleEvents(bool& running)
       m_mainWindow.toggleFullscreen();
     if (event.type == SDL_EVENT_WINDOW_RESIZED)
     {
+      if (!m_mainWindow.fullscreen())
+        m_mainWindow.updateRestoreSize(event.window.data1, event.window.data2);
+
       m_registry.clear();
       createStars(c_starsCount);
     }
