@@ -175,13 +175,12 @@ TEST(MovementSystem, WrapsAroundWindowBounds)
 {
   auto registry          = entt::registry{};
   const auto entity      = registry.create();
-  registry.emplace<ecs::Position>(entity, 790.f, 550.f);
+  registry.emplace<ecs::Position>(entity, 1990.f, 1950.f);
   registry.emplace<ecs::Velocity>(entity, 100.f, 100.f);
 
-  const auto windowWidth  = 800.f;
-  const auto windowHeight = 600.f;
-  const auto dt           = 1.f;
-  const auto epsilon      = 1e-6f;
+  const auto worldSize = 4000.f;
+  const auto dt        = 1.f;
+  const auto epsilon   = 1e-6f;
 
   auto view = registry.view<ecs::Position, ecs::Velocity>();
   for (auto [ent, pos, vel] : view.each())
@@ -189,19 +188,125 @@ TEST(MovementSystem, WrapsAroundWindowBounds)
     pos.x += vel.dx * dt;
     pos.y += vel.dy * dt;
 
-    if (pos.x < -epsilon)
-      pos.x += windowWidth;
-    else if (pos.x + epsilon >= windowWidth)
-      pos.x -= windowWidth;
+    const auto halfW = worldSize * 0.5f;
+    const auto halfH = worldSize * 0.5f;
 
-    if (pos.y < -epsilon)
-      pos.y += windowHeight;
-    else if (pos.y + epsilon >= windowHeight)
-      pos.y -= windowHeight;
+    if (pos.x < -halfW - epsilon)
+      pos.x += worldSize;
+    else if (pos.x + epsilon > halfW)
+      pos.x -= worldSize;
+
+    if (pos.y < -halfH - epsilon)
+      pos.y += worldSize;
+    else if (pos.y + epsilon > halfH)
+      pos.y -= worldSize;
   }
 
   const auto& pos = registry.get<ecs::Position>(entity);
-  
-  EXPECT_FLOAT_EQ(pos.x, 90.f);
-  EXPECT_FLOAT_EQ(pos.y, 50.f);
+
+  EXPECT_FLOAT_EQ(pos.x, -1910.f);
+  EXPECT_FLOAT_EQ(pos.y, -1950.f);
+}
+
+TEST(CameraComponent, DefaultInitialization)
+{
+  const auto cam = Camera{};
+
+  EXPECT_FLOAT_EQ(cam.x, 0.f);
+  EXPECT_FLOAT_EQ(cam.y, 0.f);
+  EXPECT_FLOAT_EQ(cam.zoom, 1.f);
+}
+
+TEST(CameraComponent, SingletonInRegistry)
+{
+  auto registry = entt::registry{};
+  registry.ctx().emplace<Camera>(100.f, 200.f, 2.f);
+
+  const auto& cam = registry.ctx().get<Camera>();
+  EXPECT_FLOAT_EQ(cam.x, 100.f);
+  EXPECT_FLOAT_EQ(cam.y, 200.f);
+  EXPECT_FLOAT_EQ(cam.zoom, 2.f);
+}
+
+TEST(ScreenPositionComponent, DefaultInitialization)
+{
+  const auto sp = ScreenPosition{};
+
+  EXPECT_EQ(sp.x, 0);
+  EXPECT_EQ(sp.y, 0);
+}
+
+TEST(TransformSystem, ProjectsWorldPositionToScreenCenter)
+{
+  auto registry = entt::registry{};
+  registry.ctx().emplace<Camera>(0.f, 0.f, 1.f);
+
+  const auto entity = registry.create();
+  registry.emplace<Position>(entity, 0.f, 0.f);
+  registry.emplace<ScreenPosition>(entity);
+
+  const auto& cam = registry.ctx().get<Camera>();
+  const int winW  = 800;
+  const int winH  = 600;
+
+  auto view = registry.view<Position, ScreenPosition>();
+  for (auto [ent, pos, screen] : view.each())
+  {
+    screen.x = static_cast<int>((pos.x - cam.x) * cam.zoom + winW * 0.5f);
+    screen.y = static_cast<int>((pos.y - cam.y) * cam.zoom + winH * 0.5f);
+  }
+
+  const auto& sp = registry.get<ScreenPosition>(entity);
+  EXPECT_EQ(sp.x, 400);
+  EXPECT_EQ(sp.y, 300);
+}
+
+TEST(TransformSystem, ProjectsWorldPositionWithCameraOffset)
+{
+  auto registry = entt::registry{};
+  registry.ctx().emplace<Camera>(100.f, 50.f, 1.f);
+
+  const auto entity = registry.create();
+  registry.emplace<Position>(entity, 200.f, 150.f);
+  registry.emplace<ScreenPosition>(entity);
+
+  const auto& cam = registry.ctx().get<Camera>();
+  const int winW  = 800;
+  const int winH  = 600;
+
+  auto view = registry.view<Position, ScreenPosition>();
+  for (auto [ent, pos, screen] : view.each())
+  {
+    screen.x = static_cast<int>((pos.x - cam.x) * cam.zoom + winW * 0.5f);
+    screen.y = static_cast<int>((pos.y - cam.y) * cam.zoom + winH * 0.5f);
+  }
+
+  const auto& sp = registry.get<ScreenPosition>(entity);
+  EXPECT_EQ(sp.x, 500);
+  EXPECT_EQ(sp.y, 400);
+}
+
+TEST(TransformSystem, ProjectsWorldPositionWithZoom)
+{
+  auto registry = entt::registry{};
+  registry.ctx().emplace<Camera>(0.f, 0.f, 2.f);
+
+  const auto entity = registry.create();
+  registry.emplace<Position>(entity, 100.f, 50.f);
+  registry.emplace<ScreenPosition>(entity);
+
+  const auto& cam = registry.ctx().get<Camera>();
+  const int winW  = 800;
+  const int winH  = 600;
+
+  auto view = registry.view<Position, ScreenPosition>();
+  for (auto [ent, pos, screen] : view.each())
+  {
+    screen.x = static_cast<int>((pos.x - cam.x) * cam.zoom + winW * 0.5f);
+    screen.y = static_cast<int>((pos.y - cam.y) * cam.zoom + winH * 0.5f);
+  }
+
+  const auto& sp = registry.get<ScreenPosition>(entity);
+  EXPECT_EQ(sp.x, 600);
+  EXPECT_EQ(sp.y, 400);
 }

@@ -45,14 +45,31 @@ ctest --preset test-linux-clang-release
 
 ## Demo: Starfield
 
-The current demo renders 2500 randomly placed monochrome stars as points on a black background at 60 FPS:
+The current demo renders 2500 randomly placed monochrome stars as points on a black background at 60 FPS in a 4000×4000 world:
 
 - Star positions are generated procedurally using `std::mt19937`
 - Each star has `Position` and `Color` ECS components
-- 200 stars have a `Velocity` component and drift at 5–30 pixels/second in random directions
-- Stars wrap around screen edges — they reappear on the opposite side when leaving the window
-- Render loop is delta-time capped for consistent frame rate
-- Press `F11` to toggle fullscreen mode (stars regenerate to fill the new resolution)
+- 500 stars have a `Velocity` component and drift at 5–30 pixels/second in random directions
+- Stars wrap around world edges — they reappear on the opposite side when leaving the world boundary
+
+### Controls
+
+| Key | Action |
+|---|---|
+| `W` / `S` | Move camera up / down |
+| `A` / `D` | Move camera left / right |
+| `Q` / `E` | Zoom out / in (0.1x–5x, multiplicative) |
+| `F11` | Toggle fullscreen (stars regenerate for new resolution) |
+| `Escape` | Exit |
+
+### Architecture
+
+The render pipeline consists of three ECS systems executed each frame:
+
+1. **MovementSystem** — updates `Position` based on `Velocity × dt` with world wrapping
+2. **TransformSystem** — converts `Position + Camera → ScreenPosition` using camera offset and zoom
+3. **RenderSystem** — draws visible stars using `ScreenPosition`, skipping those outside the screen
+
 - Press `Escape` or close the window to exit
 
 ## Dependencies

@@ -34,8 +34,8 @@ namespace sdl::core
     Renderer m_renderer;
     entt::registry m_registry;
 
-    void createStars(int count);
-    void renderStars();
+    void createScene();
+    void renderScene();
 
     void handleEvents(bool& running);
   };

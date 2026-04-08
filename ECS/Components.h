@@ -20,4 +20,17 @@ namespace ecs
   {
     SDL_Color color = {.r = 0, .g = 0, .b = 0, .a = 0};
   };
+
+  struct ScreenPosition
+  {
+    int x = 0;
+    int y = 0;
+  };
+
+  struct Camera
+  {
+    float x    = 0.0f;
+    float y    = 0.0f;
+    float zoom = 1.0f;
+  };
 }
