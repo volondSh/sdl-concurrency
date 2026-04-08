@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Renderer.hpp"
+#include "TextRenderer.hpp"
+
+#include <SDLWrapper/Widgets/FpsOverlay.hpp>
 
 #include <entt/entt.hpp>
 
@@ -37,14 +40,16 @@ namespace sdl::core
     void run();
 
   private:
-    sdl::widgets::Window& m_mainWindow;
-    Renderer m_renderer;
-    entt::registry m_registry;
-    SceneConfig m_sceneConfig;
-
     void createScene();
     void renderScene();
 
     void handleEvents(bool& running, float deltaTime);
+
+    sdl::widgets::Window& m_mainWindow;
+    Renderer m_renderer;
+    entt::registry m_registry;
+    SceneConfig m_sceneConfig;
+    TextRenderer m_textRenderer;
+    sdl::widgets::FpsOverlay m_fpsOverlay;
   };
 }

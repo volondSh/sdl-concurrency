@@ -39,39 +39,27 @@ ctest --preset test-linux-clang-release
 - Modern C++23 codebase
 - Object-oriented wrappers for SDL3
 - ECS-based rendering with EnTT
-- Concurrency experiments and multithreading patterns
-- Configurable application settings (JSON config)
+- Configurable application and scene parameters (JSON config)
+- FPS overlay with SDL3_ttf and JetBrains Mono font
 - Logging with spdlog
 
 ## Demo: Starfield
 
-The current demo renders stars as monochrome points on a black background at 60 FPS. All parameters are configurable in `app_config.json` under the `scene` section:
-
-```json
-{
-  "scene": {
-    "objects": {
-      "total": 2500,
-      "moving": 200
-    },
-    "worldSize": {
-      "width": 4000.0,
-      "height": 4000.0
-    },
-    "camera": {
-      "panSpeed": 300.0,
-      "zoomSpeed": 1.05,
-      "zoomMin": 0.1,
-      "zoomMax": 5.0
-    }
-  }
-}
-```
+The current demo renders stars as monochrome points on a black background at 60 FPS. All parameters are configurable in `app_config.json` under the `scene` section.
 
 - Star positions are generated procedurally using `std::mt19937` within `worldWidth × worldHeight` centered at (0, 0)
 - Each star has `Position` and `Color` ECS components
 - Moving stars have a `Velocity` component and drift at 5–30 pixels/second in random directions
 - Stars wrap around world edges — they reappear on the opposite side when leaving the world boundary
+
+### FPS Overlay
+
+A configurable FPS counter in the top-left corner:
+
+- Green monospace text rendered via SDL3_ttf with JetBrains Mono
+- Toggled on/off by pressing `` ` `` (backtick/grave)
+- Updates once per second with averaged frame rate
+- Automatically handles missing font file — overlay silently disables
 
 ### Controls
 
@@ -80,6 +68,7 @@ The current demo renders stars as monochrome points on a black background at 60 
 | `W` / `S` | Move camera up / down |
 | `A` / `D` | Move camera left / right |
 | `Q` / `E` | Zoom out / in (0.1x–5x, multiplicative) |
+| `` ` `` | Toggle FPS counter overlay |
 | `F11` | Toggle fullscreen (stars regenerate for new resolution) |
 | `Escape` | Exit |
 
@@ -100,10 +89,15 @@ Managed automatically via [CPM.cmake](cmake/CPM.cmake):
 | Library | Version | Purpose |
 |---|---|---|
 | [SDL3](https://github.com/libsdl-org/SDL) | 3.4.4 | Graphics, events, windowing |
+| [SDL3_ttf](https://github.com/libsdl-org/SDL_ttf) | 3.2.2 | Text rendering (FPS overlay) |
 | [spdlog](https://github.com/gabime/spdlog) | 1.14.1 | Logging |
 | [EnTT](https://github.com/skypgart/entt) | 3.16.0 | Entity-Component-System |
 | [nlohmann/json](https://github.com/nlohmann/json) | 3.12.0 | JSON configuration |
 | [GoogleTest](https://github.com/google/googletest) | 1.17.0 | Unit testing |
+
+### Fonts
+
+The FPS overlay uses **JetBrains Mono** (OFL 1.1 license), bundled in `resources/fonts/`. No manual setup required.
 
 ### Build-time options
 

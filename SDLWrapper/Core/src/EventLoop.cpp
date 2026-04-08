@@ -7,8 +7,11 @@
 
 #include <SDL3/SDL.h>
 
+#include <spdlog/spdlog.h>
+
 #include <algorithm>
 #include <cstdint>
+#include <filesystem>
 #include <numbers>
 #include <random>
 
@@ -28,9 +31,15 @@ constexpr auto c_maxStarSpeed      = 30.f;
 EventLoop::EventLoop(sdl::widgets::Window& window, SceneConfig sceneConfig)
   : m_mainWindow{window},
     m_renderer{window},
-    m_sceneConfig{sceneConfig}
+    m_sceneConfig{sceneConfig},
+    m_textRenderer{m_renderer.nativeHandle(), "resources/fonts/JetBrainsMono-Regular.ttf", 18},
+    m_fpsOverlay{m_textRenderer}
 {
   m_registry.ctx().emplace<ecs::Camera>(0.f, 0.f, 1.f);
+
+  if (!m_textRenderer.valid())
+    SPDLOG_WARN("TextRenderer failed to load - FPS overlay disabled");
+
   createScene();
 }
 
@@ -91,6 +100,8 @@ void EventLoop::handleEvents(bool& running, float deltaTime)
       running = false;
     if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE)
       running = false;
+    if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_GRAVE)
+      m_fpsOverlay.toggle();
     if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_F11)
       m_mainWindow.toggleFullscreen();
     if (event.type == SDL_EVENT_WINDOW_RESIZED)
@@ -137,9 +148,11 @@ void EventLoop::run()
     lastTick             = now;
 
     handleEvents(running, static_cast<float>(deltaTime));
+    m_fpsOverlay.update(static_cast<float>(deltaTime));
     movementSystem(m_registry, static_cast<float>(deltaTime), m_sceneConfig.worldWidth, m_sceneConfig.worldHeight);
     transformSystem(m_registry, m_registry.ctx().get<Camera>(), m_mainWindow.width(), m_mainWindow.height());
     renderScene();
+    m_fpsOverlay.render();
     m_renderer.present();
 
     const auto frameTime = (SDL_GetTicks() - now) / c_msPerSecond;

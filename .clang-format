@@ -14,7 +14,7 @@ IncludeCategories:
     Priority: 3
 SortIncludes: CaseSensitive
 IncludeBlocks: Preserve
-IndentPPDirectives: AfterHash
+IndentPPDirectives: BeforeHash
 
 FixNamespaceComments: false
 NamespaceIndentation: All

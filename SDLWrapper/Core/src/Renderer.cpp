@@ -52,3 +52,8 @@ void Renderer::present()
 {
   SDL_RenderPresent(m_pRenderer);
 }
+
+SDL_Renderer* Renderer::nativeHandle() const
+{
+  return m_pRenderer;
+}

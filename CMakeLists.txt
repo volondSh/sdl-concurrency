@@ -59,6 +59,16 @@ CPMAddPackage(
 )
 
 CPMAddPackage(
+    NAME SDL3_ttf
+    GITHUB_REPOSITORY libsdl-org/SDL_ttf
+    GIT_TAG release-3.2.2
+    OPTIONS
+        "TTF_SAMPLES OFF"
+        "TTF_TEST OFF"
+        "TTF_VENDORED ON"
+)
+
+CPMAddPackage(
     NAME nlohmann_json
     GITHUB_REPOSITORY nlohmann/json
     VERSION 3.12.0
@@ -104,6 +114,18 @@ if(WIN32)
         COMMAND_EXPAND_LISTS
     )
 endif()
+
+# Copy font to output directory on every build
+add_custom_target(copy_font ALL
+    COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:sdlc_app>/resources/fonts
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/resources/fonts/JetBrainsMono-Regular.ttf"
+        "$<TARGET_FILE_DIR:sdlc_app>/resources/fonts/JetBrainsMono-Regular.ttf"
+    COMMENT "Copying JetBrainsMono font to output directory"
+    VERBATIM
+)
+
+add_dependencies(sdlc_app copy_font)
 
 if(BUILD_TESTS)
     include(CTest)

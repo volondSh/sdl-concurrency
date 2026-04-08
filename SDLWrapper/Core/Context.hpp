@@ -19,6 +19,7 @@ namespace sdl::core
     [[nodiscard]] std::string_view init_error() const noexcept;
 
   private:
-    bool m_initialized = false;
+    bool m_initialized    = false;
+    bool m_ttfInitialized = false;
   };
 }

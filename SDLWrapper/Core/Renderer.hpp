@@ -28,7 +28,7 @@ namespace sdl::core
     void drawPoint(int x, int y, const SDL_Color&);
     void present();
 
-    [[nodiscard]] SDL_Renderer* nativeHandle() const { return m_pRenderer; }
+    [[nodiscard]] SDL_Renderer* nativeHandle() const;
 
   private:
     SDL_Renderer* m_pRenderer = nullptr;
