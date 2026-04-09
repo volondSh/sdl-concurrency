@@ -1,4 +1,5 @@
 #include <ECS/Components.h>
+#include <ECS/Systems.hpp>
 
 #include <entt/entt.hpp>
 
@@ -309,4 +310,65 @@ TEST(TransformSystem, ProjectsWorldPositionWithZoom)
   const auto& sp = registry.get<ScreenPosition>(entity);
   EXPECT_EQ(sp.x, 600);
   EXPECT_EQ(sp.y, 400);
+}
+
+TEST(CullingSystem, MarksOnscreenEntityAsVisible)
+{
+  auto registry = entt::registry{};
+
+  const auto e1 = registry.create();
+  registry.emplace<Position>(e1, 100.f, 100.f);
+  registry.emplace<ScreenPosition>(e1, 100, 100);
+
+  ecs::cullingSystem(registry, 800, 600);
+
+  EXPECT_TRUE(registry.all_of<Visible>(e1));
+}
+
+TEST(CullingSystem, RemovesVisibleFromOffscreenEntity)
+{
+  auto registry = entt::registry{};
+
+  const auto e1 = registry.create();
+  registry.emplace<Position>(e1, 100.f, 100.f);
+  registry.emplace<ScreenPosition>(e1, -10, -10);
+  registry.emplace<Visible>(e1);
+
+  ecs::cullingSystem(registry, 800, 600);
+
+  EXPECT_FALSE(registry.all_of<Visible>(e1));
+}
+
+TEST(CullingSystem, RestoresVisibleForReenteredEntity)
+{
+  auto registry = entt::registry{};
+
+  const auto e1 = registry.create();
+  registry.emplace<Position>(e1, 100.f, 100.f);
+  registry.emplace<ScreenPosition>(e1, -10, -10);
+  registry.emplace<Visible>(e1);
+
+  // First pass: off-screen → not visible
+  ecs::cullingSystem(registry, 800, 600);
+  EXPECT_FALSE(registry.all_of<Visible>(e1));
+
+  // Move on-screen
+  registry.get<ScreenPosition>(e1) = ScreenPosition{100, 100};
+
+  // Second pass: on-screen → visible again
+  ecs::cullingSystem(registry, 800, 600);
+  EXPECT_TRUE(registry.all_of<Visible>(e1));
+}
+
+TEST(CullingSystem, SkipsEntitiesWithoutScreenPosition)
+{
+  auto registry = entt::registry{};
+
+  const auto e1 = registry.create();
+  registry.emplace<Position>(e1, 100.f, 100.f);
+
+  // Should not crash or affect entity
+  ecs::cullingSystem(registry, 800, 600);
+
+  EXPECT_FALSE(registry.all_of<Visible>(e1));
 }

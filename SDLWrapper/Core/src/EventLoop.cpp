@@ -33,7 +33,7 @@ EventLoop::EventLoop(sdl::widgets::Window& window, SceneConfig sceneConfig)
     m_renderer{window},
     m_sceneConfig{sceneConfig},
     m_textRenderer{m_renderer.nativeHandle(), "resources/fonts/JetBrainsMono-Regular.ttf", 18},
-    m_fpsOverlay{m_textRenderer}
+    m_overlay{m_textRenderer}
 {
   m_registry.ctx().emplace<ecs::Camera>(0.f, 0.f, 1.f);
 
@@ -61,6 +61,7 @@ void EventLoop::createScene()
     const auto star = m_registry.create();
     m_registry.emplace<ecs::Position>(star, starPositionX(randomEngine), starPositionY(randomEngine));
     m_registry.emplace<ecs::ScreenPosition>(star);
+    m_registry.emplace<ecs::Visible>(star);
     const auto brightness = static_cast<uint8_t>(starBrightness(randomEngine));
     m_registry.emplace<ecs::Color>(star, SDL_Color{.r = brightness, .g = brightness, .b = brightness, .a = 255});
 
@@ -77,16 +78,9 @@ void EventLoop::renderScene()
 {
   m_renderer.clearWithColor(c_blackColor);
 
-  const auto view = m_registry.view<ecs::Position, ecs::ScreenPosition, ecs::Color>();
-  const auto w    = m_mainWindow.width();
-  const auto h    = m_mainWindow.height();
-
-  for (const auto& [_, pos, screen, color] : view.each())
-  {
-    if (screen.x < 0 || screen.x >= w || screen.y < 0 || screen.y >= h)
-      continue;
+  const auto view = m_registry.view<ecs::Visible, ecs::ScreenPosition, ecs::Color>();
+  for (const auto& [_, screen, color] : view.each())
     m_renderer.drawPoint(screen.x, screen.y, color.color);
-  }
 }
 
 void EventLoop::handleEvents(bool& running, float deltaTime)
@@ -101,7 +95,7 @@ void EventLoop::handleEvents(bool& running, float deltaTime)
     if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE)
       running = false;
     if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_GRAVE)
-      m_fpsOverlay.toggle();
+      m_overlay.toggle();
     if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_F11)
       m_mainWindow.toggleFullscreen();
     if (event.type == SDL_EVENT_WINDOW_RESIZED)
@@ -109,8 +103,9 @@ void EventLoop::handleEvents(bool& running, float deltaTime)
       if (!m_mainWindow.fullscreen())
         m_mainWindow.updateRestoreSize(event.window.data1, event.window.data2);
 
+      const auto savedCamera = m_registry.ctx().get<ecs::Camera>();
       m_registry.clear();
-      m_registry.ctx().emplace<ecs::Camera>(0.f, 0.f, 1.f);
+      m_registry.ctx().emplace<ecs::Camera>(savedCamera.x, savedCamera.y, savedCamera.zoom);
       createScene();
     }
   }
@@ -148,11 +143,12 @@ void EventLoop::run()
     lastTick             = now;
 
     handleEvents(running, static_cast<float>(deltaTime));
-    m_fpsOverlay.update(static_cast<float>(deltaTime));
+    m_overlay.update(static_cast<float>(deltaTime), m_registry);
     movementSystem(m_registry, static_cast<float>(deltaTime), m_sceneConfig.worldWidth, m_sceneConfig.worldHeight);
     transformSystem(m_registry, m_registry.ctx().get<Camera>(), m_mainWindow.width(), m_mainWindow.height());
+    cullingSystem(m_registry, m_mainWindow.width(), m_mainWindow.height());
     renderScene();
-    m_fpsOverlay.render();
+    m_overlay.render();
     m_renderer.present();
 
     const auto frameTime = (SDL_GetTicks() - now) / c_msPerSecond;

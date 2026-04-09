@@ -1,6 +1,9 @@
 #pragma once
 
+#include <entt/entt.hpp>
+
 #include <string>
+#include <vector>
 
 namespace sdl::core
 {
@@ -9,12 +12,12 @@ namespace sdl::core
 
 namespace sdl::widgets
 {
-  class FpsOverlay final
+  class Overlay final
   {
   public:
-    explicit FpsOverlay(const sdl::core::TextRenderer& textRenderer);
+    explicit Overlay(const sdl::core::TextRenderer& textRenderer);
 
-    void update(float deltaTime);
+    void update(float deltaTime, const entt::registry& registry);
     void render();
     void toggle();
 
@@ -25,6 +28,6 @@ namespace sdl::widgets
     bool m_visible   = false;
     float m_elapsed  = 0.f;
     int m_frameCount = 0;
-    std::string m_text;
+    std::vector<std::string> m_lines;
   };
 }

@@ -33,4 +33,6 @@ namespace ecs
     float y    = 0.0f;
     float zoom = 1.0f;
   };
+
+  struct Visible {};
 }

@@ -3,7 +3,7 @@
 #include "Renderer.hpp"
 #include "TextRenderer.hpp"
 
-#include <SDLWrapper/Widgets/FpsOverlay.hpp>
+#include <SDLWrapper/Widgets/Overlay.hpp>
 
 #include <entt/entt.hpp>
 
@@ -50,6 +50,6 @@ namespace sdl::core
     entt::registry m_registry;
     SceneConfig m_sceneConfig;
     TextRenderer m_textRenderer;
-    sdl::widgets::FpsOverlay m_fpsOverlay;
+    sdl::widgets::Overlay m_overlay;
   };
 }

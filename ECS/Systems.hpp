@@ -42,4 +42,18 @@ namespace ecs
       screenPos.y = static_cast<int>(((pos.y - camera.y) * camera.zoom) + halfH);
     }
   }
+
+  inline void cullingSystem(entt::registry& reg, int windowWidth, int windowHeight)
+  {
+    auto view = reg.view<Position, ScreenPosition>();
+    for (const auto [entity, _, screenPos] : view.each())
+    {
+      const bool inView = screenPos.x >= 0 && screenPos.x < windowWidth
+                       && screenPos.y >= 0 && screenPos.y < windowHeight;
+      if (inView)
+        reg.emplace_or_replace<Visible>(entity);
+      else
+        reg.remove<Visible>(entity);
+    }
+  }
 }

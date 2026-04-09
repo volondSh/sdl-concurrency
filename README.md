@@ -52,14 +52,13 @@ The current demo renders stars as monochrome points on a black background at 60 
 - Moving stars have a `Velocity` component and drift at 5–30 pixels/second in random directions
 - Stars wrap around world edges — they reappear on the opposite side when leaving the world boundary
 
-### FPS Overlay
+### Overlay
 
-A configurable FPS counter in the top-left corner:
+A debug overlay in the top-left corner (toggled with `` ` ``):
 
-- Green monospace text rendered via SDL3_ttf with JetBrains Mono
-- Toggled on/off by pressing `` ` `` (backtick/grave)
-- Updates once per second with averaged frame rate
-- Automatically handles missing font file — overlay silently disables
+- Green monospace text via SDL3_ttf with JetBrains Mono
+- Shows: **FPS**, total **Entities** count, **Visible** entities (in frustum)
+- Updates once per second with averaged values
 
 ### Controls
 
@@ -78,7 +77,8 @@ The render pipeline consists of three ECS systems executed each frame:
 
 1. **MovementSystem** — updates `Position` based on `Velocity × dt` with world wrapping
 2. **TransformSystem** — converts `Position + Camera → ScreenPosition` using camera offset and zoom
-3. **RenderSystem** — draws visible stars using `ScreenPosition`, skipping those outside the screen
+3. **CullingSystem** — marks visible entities based on screen bounds (`Visible` tag)
+4. **RenderSystem** — draws only `Visible` entities (skipped off-screen stars)
 
 - Press `Escape` or close the window to exit
 

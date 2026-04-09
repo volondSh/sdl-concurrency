@@ -1,6 +1,6 @@
 add_library(SDLWrapperWidgets STATIC
     src/Window.cpp
-    src/FpsOverlay.cpp
+    src/Overlay.cpp
 )
 
 target_include_directories(SDLWrapperWidgets
