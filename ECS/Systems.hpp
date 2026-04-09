@@ -2,6 +2,7 @@
 
 #include <ECS/Components.h>
 
+#include <cmath>
 #include <entt/entt.hpp>
 
 namespace ecs
@@ -48,12 +49,28 @@ namespace ecs
     auto view = reg.view<Position, ScreenPosition>();
     for (const auto [entity, _, screenPos] : view.each())
     {
-      const bool inView = screenPos.x >= 0 && screenPos.x < windowWidth
-                       && screenPos.y >= 0 && screenPos.y < windowHeight;
+      const auto inView =
+          screenPos.x >= 0 && screenPos.x < windowWidth && screenPos.y >= 0 && screenPos.y < windowHeight;
       if (inView)
         reg.emplace_or_replace<Visible>(entity);
       else
         reg.remove<Visible>(entity);
+    }
+  }
+
+  inline void twinkleSystem(entt::registry& reg, float dt)
+  {
+    auto view = reg.view<Color, Twinkle>();
+    for (const auto [entity, color, twinkle] : view.each())
+    {
+      twinkle.phase += twinkle.frequency * dt;
+
+      const auto factor = 0.5f + 0.5f * std::sin(twinkle.phase);
+      const auto bright = static_cast<uint8_t>(color.color.r * (1.0f - twinkle.amplitude + twinkle.amplitude * factor));
+
+      color.color.r = bright;
+      color.color.g = bright;
+      color.color.b = bright;
     }
   }
 }

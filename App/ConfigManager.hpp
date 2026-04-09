@@ -27,6 +27,10 @@ namespace app
 
     [[nodiscard]] int totalStars() const;
     [[nodiscard]] int movingStars() const;
+    [[nodiscard]] int starMinBrightness() const;
+    [[nodiscard]] int starMaxBrightness() const;
+    [[nodiscard]] float starMinSpeed() const;
+    [[nodiscard]] float starMaxSpeed() const;
     [[nodiscard]] float worldWidth() const;
     [[nodiscard]] float worldHeight() const;
     [[nodiscard]] float cameraPanSpeed() const;
@@ -38,6 +42,12 @@ namespace app
     void setMovingStars(int count);
     void setWorldWidth(float width);
     void setWorldHeight(float height);
+
+    [[nodiscard]] int twinklingStars() const;
+    [[nodiscard]] float twinkleMinFreq() const;
+    [[nodiscard]] float twinkleMaxFreq() const;
+    [[nodiscard]] float twinkleMinAmp() const;
+    [[nodiscard]] float twinkleMaxAmp() const;
 
   private:
     std::filesystem::path m_configPath;

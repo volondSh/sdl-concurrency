@@ -18,12 +18,21 @@ namespace sdl::core
   {
     int totalStars;
     int movingStars;
+    int starMinBrightness;
+    int starMaxBrightness;
+    float starMinSpeed;
+    float starMaxSpeed;
     float worldWidth;
     float worldHeight;
     float cameraPanSpeed;
     float cameraZoomSpeed;
     float cameraZoomMin;
     float cameraZoomMax;
+    int twinklingStars;
+    float twinkleMinFreq;
+    float twinkleMaxFreq;
+    float twinkleMinAmp;
+    float twinkleMaxAmp;
   };
 
   class EventLoop

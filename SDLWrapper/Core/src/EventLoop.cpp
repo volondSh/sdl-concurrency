@@ -19,14 +19,10 @@ using namespace sdl::core;
 using namespace sdl::widgets;
 using namespace ecs;
 
-constexpr auto c_targetFPS         = 60;
-constexpr auto c_targetDelta       = 1.0 / static_cast<double>(c_targetFPS);
-constexpr auto c_msPerSecond       = 1000.0;
-constexpr auto c_minStarBrightness = 100;
-constexpr auto c_maxStarBrightness = 255;
-constexpr auto c_blackColor        = SDL_Color{.r = 0, .g = 0, .b = 0, .a = 255};
-constexpr auto c_minStarSpeed      = 5.f;
-constexpr auto c_maxStarSpeed      = 30.f;
+constexpr auto c_targetFPS   = 60;
+constexpr auto c_targetDelta = 1.0 / static_cast<double>(c_targetFPS);
+constexpr auto c_msPerSecond = 1000.0;
+constexpr auto c_blackColor  = SDL_Color{.r = 0, .g = 0, .b = 0, .a = 255};
 
 EventLoop::EventLoop(sdl::widgets::Window& window, SceneConfig sceneConfig)
   : m_mainWindow{window},
@@ -52,9 +48,13 @@ void EventLoop::createScene()
   auto randomEngine      = std::mt19937(std::random_device{}());
   auto starPositionX     = std::uniform_real_distribution<float>(-worldWidth * 0.5f, worldWidth * 0.5f);
   auto starPositionY     = std::uniform_real_distribution<float>(-worldHeight * 0.5f, worldHeight * 0.5f);
-  auto starBrightness    = std::uniform_int_distribution<int>(c_minStarBrightness, c_maxStarBrightness);
-  auto starSpeed         = std::uniform_real_distribution<float>(c_minStarSpeed, c_maxStarSpeed);
-  auto starAngle         = std::uniform_real_distribution<float>(0.f, 2.f * std::numbers::pi_v<float>);
+  auto starBrightness =
+      std::uniform_int_distribution<int>(m_sceneConfig.starMinBrightness, m_sceneConfig.starMaxBrightness);
+  auto starSpeed    = std::uniform_real_distribution<float>(m_sceneConfig.starMinSpeed, m_sceneConfig.starMaxSpeed);
+  auto starAngle    = std::uniform_real_distribution<float>(0.f, 2.f * std::numbers::pi_v<float>);
+  auto twinkleFreq  = std::uniform_real_distribution<float>(m_sceneConfig.twinkleMinFreq, m_sceneConfig.twinkleMaxFreq);
+  auto twinkleAmp   = std::uniform_real_distribution<float>(m_sceneConfig.twinkleMinAmp, m_sceneConfig.twinkleMaxAmp);
+  auto twinklePhase = std::uniform_real_distribution<float>(0.f, 6.2832f);
 
   for (unsigned int i = 0; i < static_cast<unsigned int>(m_sceneConfig.totalStars); ++i)
   {
@@ -71,6 +71,10 @@ void EventLoop::createScene()
       const auto angle = starAngle(randomEngine);
       m_registry.emplace<ecs::Velocity>(star, std::cos(angle) * speed, std::sin(angle) * speed);
     }
+
+    if (i < static_cast<unsigned int>(m_sceneConfig.twinklingStars))
+      m_registry
+          .emplace<ecs::Twinkle>(star, twinklePhase(randomEngine), twinkleFreq(randomEngine), twinkleAmp(randomEngine));
   }
 }
 
@@ -145,6 +149,7 @@ void EventLoop::run()
     handleEvents(running, static_cast<float>(deltaTime));
     m_overlay.update(static_cast<float>(deltaTime), m_registry);
     movementSystem(m_registry, static_cast<float>(deltaTime), m_sceneConfig.worldWidth, m_sceneConfig.worldHeight);
+    twinkleSystem(m_registry, static_cast<float>(deltaTime));
     transformSystem(m_registry, m_registry.ctx().get<Camera>(), m_mainWindow.width(), m_mainWindow.height());
     cullingSystem(m_registry, m_mainWindow.width(), m_mainWindow.height());
     renderScene();

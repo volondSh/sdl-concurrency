@@ -10,20 +10,29 @@ namespace
 {
   nlohmann::json defaultConfig()
   {
-    auto defaults                            = nlohmann::json::object();
-    defaults["window"]["width"]              = 1280;
-    defaults["window"]["height"]             = 720;
-    defaults["window"]["resizable"]          = true;
-    defaults["window"]["fullscreen"]         = false;
-    defaults["logging"]["level"]             = "off";
-    defaults["scene"]["objects"]["total"]    = 2500;
-    defaults["scene"]["objects"]["moving"]   = 200;
-    defaults["scene"]["worldSize"]["width"]  = 4000.f;
-    defaults["scene"]["worldSize"]["height"] = 4000.f;
-    defaults["scene"]["camera"]["panSpeed"]  = 300.f;
-    defaults["scene"]["camera"]["zoomSpeed"] = 1.05f;
-    defaults["scene"]["camera"]["zoomMin"]   = 0.1f;
-    defaults["scene"]["camera"]["zoomMax"]   = 5.f;
+    auto defaults                               = nlohmann::json::object();
+    defaults["window"]["width"]                 = 1280;
+    defaults["window"]["height"]                = 720;
+    defaults["window"]["resizable"]             = true;
+    defaults["window"]["fullscreen"]            = false;
+    defaults["logging"]["level"]                = "off";
+    defaults["scene"]["stars"]["total"]         = 2500;
+    defaults["scene"]["stars"]["moving"]        = 200;
+    defaults["scene"]["stars"]["minBrightness"] = 100;
+    defaults["scene"]["stars"]["maxBrightness"] = 255;
+    defaults["scene"]["stars"]["minSpeed"]      = 5.f;
+    defaults["scene"]["stars"]["maxSpeed"]      = 30.f;
+    defaults["scene"]["worldSize"]["width"]     = 4000.f;
+    defaults["scene"]["worldSize"]["height"]    = 4000.f;
+    defaults["scene"]["camera"]["panSpeed"]     = 300.f;
+    defaults["scene"]["camera"]["zoomSpeed"]    = 1.05f;
+    defaults["scene"]["camera"]["zoomMin"]      = 0.1f;
+    defaults["scene"]["camera"]["zoomMax"]      = 5.f;
+    defaults["scene"]["twinkle"]["stars"]       = 500;
+    defaults["scene"]["twinkle"]["minFreq"]     = 0.5f;
+    defaults["scene"]["twinkle"]["maxFreq"]     = 3.0f;
+    defaults["scene"]["twinkle"]["minAmp"]      = 0.3f;
+    defaults["scene"]["twinkle"]["maxAmp"]      = 0.8f;
     return defaults;
   }
 
@@ -55,12 +64,20 @@ namespace
     if (config.contains("scene"))
     {
       const auto& scene = config["scene"];
-      if (scene.contains("objects"))
+      if (scene.contains("stars"))
       {
-        const auto& objects = scene["objects"];
-        if (objects.contains("total") && !objects["total"].is_number())
+        const auto& stars = scene["stars"];
+        if (stars.contains("total") && !stars["total"].is_number())
           return false;
-        if (objects.contains("moving") && !objects["moving"].is_number())
+        if (stars.contains("moving") && !stars["moving"].is_number())
+          return false;
+        if (stars.contains("minBrightness") && !stars["minBrightness"].is_number())
+          return false;
+        if (stars.contains("maxBrightness") && !stars["maxBrightness"].is_number())
+          return false;
+        if (stars.contains("minSpeed") && !stars["minSpeed"].is_number())
+          return false;
+        if (stars.contains("maxSpeed") && !stars["maxSpeed"].is_number())
           return false;
       }
       if (scene.contains("worldSize"))
@@ -81,6 +98,20 @@ namespace
         if (camera.contains("zoomMin") && !camera["zoomMin"].is_number())
           return false;
         if (camera.contains("zoomMax") && !camera["zoomMax"].is_number())
+          return false;
+      }
+      if (scene.contains("twinkle"))
+      {
+        const auto& twinkle = scene["twinkle"];
+        if (twinkle.contains("stars") && !twinkle["stars"].is_number())
+          return false;
+        if (twinkle.contains("minFreq") && !twinkle["minFreq"].is_number())
+          return false;
+        if (twinkle.contains("maxFreq") && !twinkle["maxFreq"].is_number())
+          return false;
+        if (twinkle.contains("minAmp") && !twinkle["minAmp"].is_number())
+          return false;
+        if (twinkle.contains("maxAmp") && !twinkle["maxAmp"].is_number())
           return false;
       }
     }
@@ -199,12 +230,32 @@ void ConfigManager::setWindowFullscreen(bool fullscreen)
 
 int ConfigManager::totalStars() const
 {
-  return m_config["scene"]["objects"]["total"].get<int>();
+  return m_config["scene"]["stars"]["total"].get<int>();
 }
 
 int ConfigManager::movingStars() const
 {
-  return m_config["scene"]["objects"]["moving"].get<int>();
+  return m_config["scene"]["stars"]["moving"].get<int>();
+}
+
+int ConfigManager::starMinBrightness() const
+{
+  return m_config["scene"]["stars"]["minBrightness"].get<int>();
+}
+
+int ConfigManager::starMaxBrightness() const
+{
+  return m_config["scene"]["stars"]["maxBrightness"].get<int>();
+}
+
+float ConfigManager::starMinSpeed() const
+{
+  return m_config["scene"]["stars"]["minSpeed"].get<float>();
+}
+
+float ConfigManager::starMaxSpeed() const
+{
+  return m_config["scene"]["stars"]["maxSpeed"].get<float>();
 }
 
 float ConfigManager::worldWidth() const
@@ -219,12 +270,12 @@ float ConfigManager::worldHeight() const
 
 void ConfigManager::setTotalStars(int count)
 {
-  m_config["scene"]["objects"]["total"] = count;
+  m_config["scene"]["stars"]["total"] = count;
 }
 
 void ConfigManager::setMovingStars(int count)
 {
-  m_config["scene"]["objects"]["moving"] = count;
+  m_config["scene"]["stars"]["moving"] = count;
 }
 
 void ConfigManager::setWorldWidth(float width)
@@ -255,4 +306,29 @@ float ConfigManager::cameraZoomMin() const
 float ConfigManager::cameraZoomMax() const
 {
   return m_config["scene"]["camera"]["zoomMax"].get<float>();
+}
+
+int ConfigManager::twinklingStars() const
+{
+  return m_config["scene"]["twinkle"]["stars"].get<int>();
+}
+
+float ConfigManager::twinkleMinFreq() const
+{
+  return m_config["scene"]["twinkle"]["minFreq"].get<float>();
+}
+
+float ConfigManager::twinkleMaxFreq() const
+{
+  return m_config["scene"]["twinkle"]["maxFreq"].get<float>();
+}
+
+float ConfigManager::twinkleMinAmp() const
+{
+  return m_config["scene"]["twinkle"]["minAmp"].get<float>();
+}
+
+float ConfigManager::twinkleMaxAmp() const
+{
+  return m_config["scene"]["twinkle"]["maxAmp"].get<float>();
 }

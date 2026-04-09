@@ -128,13 +128,13 @@ TEST(EcsRegistry, DestroyedEntityNotInView)
 
 TEST(MovementSystem, UpdatesPositionBasedOnVelocity)
 {
-  auto registry = entt::registry{};
+  auto registry     = entt::registry{};
   const auto entity = registry.create();
   registry.emplace<ecs::Position>(entity, 100.f, 100.f);
   registry.emplace<ecs::Velocity>(entity, 50.f, -30.f);
 
   const auto dt = 0.5f;
-  auto view = registry.view<ecs::Position, ecs::Velocity>();
+  auto view     = registry.view<ecs::Position, ecs::Velocity>();
   for (auto [ent, pos, vel] : view.each())
   {
     pos.x += vel.dx * dt;
@@ -166,7 +166,7 @@ TEST(MovementSystem, OnlyAffectsEntitiesWithBothComponents)
       });
 
   const auto& stationaryPos = registry.get<ecs::Position>(stationary);
-  const auto& movingPos = registry.get<ecs::Position>(moving);
+  const auto& movingPos     = registry.get<ecs::Position>(moving);
 
   EXPECT_FLOAT_EQ(stationaryPos.x, 100.f);
   EXPECT_FLOAT_EQ(movingPos.x, 200.f);
@@ -174,8 +174,8 @@ TEST(MovementSystem, OnlyAffectsEntitiesWithBothComponents)
 
 TEST(MovementSystem, WrapsAroundWindowBounds)
 {
-  auto registry          = entt::registry{};
-  const auto entity      = registry.create();
+  auto registry     = entt::registry{};
+  const auto entity = registry.create();
   registry.emplace<ecs::Position>(entity, 1990.f, 1950.f);
   registry.emplace<ecs::Velocity>(entity, 100.f, 100.f);
 
@@ -253,8 +253,8 @@ TEST(TransformSystem, ProjectsWorldPositionToScreenCenter)
   auto view = registry.view<Position, ScreenPosition>();
   for (auto [ent, pos, screen] : view.each())
   {
-    screen.x = static_cast<int>((pos.x - cam.x) * cam.zoom + winW * 0.5f);
-    screen.y = static_cast<int>((pos.y - cam.y) * cam.zoom + winH * 0.5f);
+    screen.x = static_cast<int>(((pos.x - cam.x) * cam.zoom) + winW * 0.5f);
+    screen.y = static_cast<int>(((pos.y - cam.y) * cam.zoom) + winH * 0.5f);
   }
 
   const auto& sp = registry.get<ScreenPosition>(entity);
@@ -278,8 +278,8 @@ TEST(TransformSystem, ProjectsWorldPositionWithCameraOffset)
   auto view = registry.view<Position, ScreenPosition>();
   for (auto [ent, pos, screen] : view.each())
   {
-    screen.x = static_cast<int>((pos.x - cam.x) * cam.zoom + winW * 0.5f);
-    screen.y = static_cast<int>((pos.y - cam.y) * cam.zoom + winH * 0.5f);
+    screen.x = static_cast<int>(((pos.x - cam.x) * cam.zoom) + winW * 0.5f);
+    screen.y = static_cast<int>(((pos.y - cam.y) * cam.zoom) + winH * 0.5f);
   }
 
   const auto& sp = registry.get<ScreenPosition>(entity);
@@ -303,8 +303,8 @@ TEST(TransformSystem, ProjectsWorldPositionWithZoom)
   auto view = registry.view<Position, ScreenPosition>();
   for (auto [ent, pos, screen] : view.each())
   {
-    screen.x = static_cast<int>((pos.x - cam.x) * cam.zoom + winW * 0.5f);
-    screen.y = static_cast<int>((pos.y - cam.y) * cam.zoom + winH * 0.5f);
+    screen.x = static_cast<int>(((pos.x - cam.x) * cam.zoom) + winW * 0.5f);
+    screen.y = static_cast<int>(((pos.y - cam.y) * cam.zoom) + winH * 0.5f);
   }
 
   const auto& sp = registry.get<ScreenPosition>(entity);
@@ -353,7 +353,7 @@ TEST(CullingSystem, RestoresVisibleForReenteredEntity)
   EXPECT_FALSE(registry.all_of<Visible>(e1));
 
   // Move on-screen
-  registry.get<ScreenPosition>(e1) = ScreenPosition{100, 100};
+  registry.get<ScreenPosition>(e1) = ScreenPosition{.x = 100, .y = 100};
 
   // Second pass: on-screen → visible again
   ecs::cullingSystem(registry, 800, 600);
@@ -371,4 +371,44 @@ TEST(CullingSystem, SkipsEntitiesWithoutScreenPosition)
   ecs::cullingSystem(registry, 800, 600);
 
   EXPECT_FALSE(registry.all_of<Visible>(e1));
+}
+
+TEST(TwinkleComponent, DefaultInitialization)
+{
+  const auto twinkle = Twinkle{};
+
+  EXPECT_FLOAT_EQ(twinkle.phase, 0.f);
+  EXPECT_FLOAT_EQ(twinkle.frequency, 1.f);
+  EXPECT_FLOAT_EQ(twinkle.amplitude, 0.5f);
+}
+
+TEST(TwinkleSystem, ModulatesBrightnessOverTime)
+{
+  auto registry = entt::registry{};
+
+  const auto e1 = registry.create();
+  registry.emplace<Color>(e1, SDL_Color{.r = 200, .g = 200, .b = 200, .a = 255});
+  registry.emplace<Twinkle>(e1, 0.f, 1.f, 0.5f);
+
+  const auto initialR = registry.get<Color>(e1).color.r;
+
+  ecs::twinkleSystem(registry, 1.f);
+
+  const auto newR = registry.get<Color>(e1).color.r;
+  EXPECT_NE(newR, initialR);
+  EXPECT_LT(newR, 255u);
+}
+
+TEST(TwinkleSystem, DoesNotAffectNonTwinklingEntities)
+{
+  auto registry = entt::registry{};
+
+  const auto e1 = registry.create();
+  registry.emplace<Color>(e1, SDL_Color{.r = 200, .g = 200, .b = 200, .a = 255});
+
+  const auto initialR = registry.get<Color>(e1).color.r;
+
+  ecs::twinkleSystem(registry, 1.f);
+
+  EXPECT_EQ(registry.get<Color>(e1).color.r, initialR);
 }

@@ -49,6 +49,7 @@ The current demo renders stars as monochrome points on a black background at 60 
 
 - Star positions are generated procedurally using `std::mt19937` within `worldWidth × worldHeight` centered at (0, 0)
 - Each star has `Position` and `Color` ECS components
+- Configurable number of twinkling stars with adjustable frequency and amplitude
 - Moving stars have a `Velocity` component and drift at 5–30 pixels/second in random directions
 - Stars wrap around world edges — they reappear on the opposite side when leaving the world boundary
 
@@ -76,9 +77,10 @@ A debug overlay in the top-left corner (toggled with `` ` ``):
 The render pipeline consists of three ECS systems executed each frame:
 
 1. **MovementSystem** — updates `Position` based on `Velocity × dt` with world wrapping
-2. **TransformSystem** — converts `Position + Camera → ScreenPosition` using camera offset and zoom
-3. **CullingSystem** — marks visible entities based on screen bounds (`Visible` tag)
-4. **RenderSystem** — draws only `Visible` entities (skipped off-screen stars)
+2. **TwinkleSystem** — modulates star brightness via sinusoidal phase
+3. **TransformSystem** — converts `Position + Camera → ScreenPosition` using camera offset and zoom
+4. **CullingSystem** — marks visible entities based on screen bounds (`Visible` tag)
+5. **RenderSystem** — draws only `Visible` entities (skipped off-screen stars)
 
 - Press `Escape` or close the window to exit
 

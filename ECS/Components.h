@@ -34,5 +34,14 @@ namespace ecs
     float zoom = 1.0f;
   };
 
-  struct Visible {};
+  struct Visible
+  {
+  };
+
+  struct Twinkle
+  {
+    float phase     = 0.0f;
+    float frequency = 1.0f;
+    float amplitude = 0.5f;
+  };
 }

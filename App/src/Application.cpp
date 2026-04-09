@@ -23,14 +23,23 @@ Application::Application(ConfigManager& configManager)
     m_eventLoop{
         m_mainWindow,
         SceneConfig{
-            .totalStars      = configManager.totalStars(),
-            .movingStars     = configManager.movingStars(),
-            .worldWidth      = configManager.worldWidth(),
-            .worldHeight     = configManager.worldHeight(),
-            .cameraPanSpeed  = configManager.cameraPanSpeed(),
-            .cameraZoomSpeed = configManager.cameraZoomSpeed(),
-            .cameraZoomMin   = configManager.cameraZoomMin(),
-            .cameraZoomMax   = configManager.cameraZoomMax()}},
+            .totalStars        = configManager.totalStars(),
+            .movingStars       = configManager.movingStars(),
+            .starMinBrightness = configManager.starMinBrightness(),
+            .starMaxBrightness = configManager.starMaxBrightness(),
+            .starMinSpeed      = configManager.starMinSpeed(),
+            .starMaxSpeed      = configManager.starMaxSpeed(),
+            .worldWidth        = configManager.worldWidth(),
+            .worldHeight       = configManager.worldHeight(),
+            .cameraPanSpeed    = configManager.cameraPanSpeed(),
+            .cameraZoomSpeed   = configManager.cameraZoomSpeed(),
+            .cameraZoomMin     = configManager.cameraZoomMin(),
+            .cameraZoomMax     = configManager.cameraZoomMax(),
+            .twinklingStars    = configManager.twinklingStars(),
+            .twinkleMinFreq    = configManager.twinkleMinFreq(),
+            .twinkleMaxFreq    = configManager.twinkleMaxFreq(),
+            .twinkleMinAmp     = configManager.twinkleMinAmp(),
+            .twinkleMaxAmp     = configManager.twinkleMaxAmp()}},
     m_configManager{configManager}
 {
 }
