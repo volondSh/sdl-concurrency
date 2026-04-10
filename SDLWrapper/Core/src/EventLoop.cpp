@@ -147,12 +147,14 @@ void EventLoop::run()
     lastTick             = now;
 
     handleEvents(running, static_cast<float>(deltaTime));
-    m_overlay.update(static_cast<float>(deltaTime), m_registry);
+
     movementSystem(m_registry, static_cast<float>(deltaTime), m_sceneConfig.worldWidth, m_sceneConfig.worldHeight);
     twinkleSystem(m_registry, static_cast<float>(deltaTime));
     transformSystem(m_registry, m_registry.ctx().get<Camera>(), m_mainWindow.width(), m_mainWindow.height());
     cullingSystem(m_registry, m_mainWindow.width(), m_mainWindow.height());
     renderScene();
+
+    m_overlay.update(static_cast<float>(deltaTime), m_registry);
     m_overlay.render();
     m_renderer.present();
 

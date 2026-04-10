@@ -9,6 +9,18 @@
 
 using namespace sdl::widgets;
 
+namespace
+{
+  template <typename... Ts>
+  int countEntities(const entt::registry& reg)
+  {
+    auto count = 0;
+    for (auto&& _ : reg.view<Ts...>())
+      ++count;
+    return count;
+  }
+}
+
 Overlay::Overlay(const sdl::core::TextRenderer& textRenderer) : m_textRenderer{textRenderer}
 {
 }
@@ -22,10 +34,14 @@ void Overlay::update(float deltaTime, const entt::registry& registry)
     return;
 
   m_lines.clear();
-  m_lines.reserve(3);
-  m_lines.push_back(std::format("FPS: {}", static_cast<int>(m_frameCount / m_elapsed)));
-  m_lines.push_back(std::format("Entities: {}", static_cast<int>(registry.view<ecs::Position>().size())));
-  m_lines.push_back(std::format("Visible: {}", static_cast<int>(registry.view<ecs::Visible>().size())));
+  m_lines.emplace_back(std::format("FPS: {}", static_cast<int>(m_frameCount / m_elapsed)));
+  m_lines.emplace_back(std::format("Entities: {}", static_cast<int>(registry.view<ecs::Position>().size())));
+  m_lines.emplace_back(std::format("Moving: {}", static_cast<int>(registry.view<ecs::Velocity>().size())));
+  m_lines.emplace_back(std::format("Twinkle: {}", static_cast<int>(registry.view<ecs::Twinkle>().size())));
+  m_lines.emplace_back("Visible:");
+  m_lines.emplace_back(std::format(" Entities: {}", static_cast<int>(registry.view<ecs::Visible>().size())));
+  m_lines.emplace_back(std::format(" Moving: {}", countEntities<ecs::Visible, ecs::Velocity>(registry)));
+  m_lines.emplace_back(std::format(" Twinkle: {}", countEntities<ecs::Visible, ecs::Twinkle>(registry)));
 
   m_elapsed    = 0.f;
   m_frameCount = 0;
