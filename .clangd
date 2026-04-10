@@ -1,5 +1,8 @@
 CompileFlags:
   CompilationDatabase: .
+Diagnostics:
+  Suppress:
+    - invalid_consteval_call
 InlayHints:
   ParameterNames: false
   DeducedTypes: false

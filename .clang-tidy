@@ -10,4 +10,6 @@ Checks: |
   -modernize-use-trailing-return-type,
   -readability-magic-numbers,
   -cppcoreguidelines-avoid-magic-numbers,
-  -readability-braces-around-statements
+  -readability-braces-around-statements,
+  -readability-uppercase-literal-suffix,
+  -readability-identifier-length
