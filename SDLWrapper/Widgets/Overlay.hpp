@@ -1,5 +1,7 @@
 #pragma once
 
+#include <SDLWrapper/Core/Profiler.hpp>
+
 #include <entt/entt.hpp>
 
 #include <string>
@@ -17,7 +19,8 @@ namespace sdl::widgets
   public:
     explicit Overlay(const sdl::core::TextRenderer& textRenderer);
 
-    void update(float deltaTime, const entt::registry& registry);
+    void update(float deltaTime, const entt::registry& registry,
+                const std::vector<sdl::core::ProfileEntry>& profiles);
     void render();
     void toggle();
 

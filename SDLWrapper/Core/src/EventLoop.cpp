@@ -148,15 +148,33 @@ void EventLoop::run()
 
     handleEvents(running, static_cast<float>(deltaTime));
 
-    movementSystem(m_registry, static_cast<float>(deltaTime), m_sceneConfig.worldWidth, m_sceneConfig.worldHeight);
-    twinkleSystem(m_registry, static_cast<float>(deltaTime));
-    transformSystem(m_registry, m_registry.ctx().get<Camera>(), m_mainWindow.width(), m_mainWindow.height());
-    cullingSystem(m_registry, m_mainWindow.width(), m_mainWindow.height());
-    renderScene();
+    {
+      auto _ = m_profiler.profile("movement");
+      movementSystem(m_registry, static_cast<float>(deltaTime), m_sceneConfig.worldWidth, m_sceneConfig.worldHeight);
+    }
+    {
+      auto _ = m_profiler.profile("twinkle");
+      twinkleSystem(m_registry, static_cast<float>(deltaTime));
+    }
+    {
+      auto _ = m_profiler.profile("transform");
+      transformSystem(m_registry, m_registry.ctx().get<Camera>(), m_mainWindow.width(), m_mainWindow.height());
+    }
+    {
+      auto _ = m_profiler.profile("culling");
+      cullingSystem(m_registry, m_mainWindow.width(), m_mainWindow.height());
+    }
+    {
+      auto _ = m_profiler.profile("render");
+      renderScene();
+    }
 
-    m_overlay.update(static_cast<float>(deltaTime), m_registry);
+    m_profiler.accumulate();
+    m_overlay.update(static_cast<float>(deltaTime), m_registry, m_profiler.results());
     m_overlay.render();
     m_renderer.present();
+
+    m_profiler.reset();
 
     const auto frameTime = (SDL_GetTicks() - now) / c_msPerSecond;
     if (frameTime < c_targetDelta)

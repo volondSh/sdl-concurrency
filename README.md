@@ -58,7 +58,12 @@ The current demo renders stars as monochrome points on a black background at 60 
 A debug overlay in the top-left corner (toggled with `` ` ``):
 
 - Green monospace text via SDL3_ttf with JetBrains Mono
-- Shows: **FPS**, total **Entities** count, **Visible** entities (in frustum)
+- **FPS** — frames per second
+- **Entities** — total `Position` entities
+- **Moving** — entities with `Velocity` component
+- **Twinkle** — entities with `Twinkle` component
+- **Visible** — entities currently on screen, broken down by `Moving` and `Twinkle`
+- **Per-system timing** — movement, twinkle, transform, culling, render + total
 - Updates once per second with averaged values
 
 ### Controls
@@ -81,6 +86,14 @@ The render pipeline consists of three ECS systems executed each frame:
 3. **TransformSystem** — converts `Position + Camera → ScreenPosition` using camera offset and zoom
 4. **CullingSystem** — marks visible entities based on screen bounds (`Visible` tag)
 5. **RenderSystem** — draws only `Visible` entities (skipped off-screen stars)
+
+### Profiling
+
+Each system is wrapped in a `Profiler::Scope` for per-frame timing measurement:
+
+- Results sorted by call order (not by duration)
+- `accumulate()` copies and clears per-frame accumulators
+- RAII scope ensures timing is captured even on early returns
 
 - Press `Escape` or close the window to exit
 

@@ -1,6 +1,7 @@
 add_library(SDLWrapperCore STATIC
     src/Context.cpp
     src/EventLoop.cpp
+    src/Profiler.cpp
     src/Renderer.cpp
     src/TextRenderer.cpp
 )

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Profiler.hpp"
 #include "Renderer.hpp"
 #include "TextRenderer.hpp"
 
@@ -60,5 +61,6 @@ namespace sdl::core
     SceneConfig m_sceneConfig;
     TextRenderer m_textRenderer;
     sdl::widgets::Overlay m_overlay;
+    Profiler m_profiler;
   };
 }

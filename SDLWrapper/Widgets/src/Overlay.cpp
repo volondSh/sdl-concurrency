@@ -25,7 +25,10 @@ Overlay::Overlay(const sdl::core::TextRenderer& textRenderer) : m_textRenderer{t
 {
 }
 
-void Overlay::update(float deltaTime, const entt::registry& registry)
+void Overlay::update(
+    float deltaTime,
+    const entt::registry& registry,
+    const std::vector<sdl::core::ProfileEntry>& profiles)
 {
   m_elapsed += deltaTime;
   ++m_frameCount;
@@ -42,6 +45,19 @@ void Overlay::update(float deltaTime, const entt::registry& registry)
   m_lines.emplace_back(std::format(" Entities: {}", static_cast<int>(registry.view<ecs::Visible>().size())));
   m_lines.emplace_back(std::format(" Moving: {}", countEntities<ecs::Visible, ecs::Velocity>(registry)));
   m_lines.emplace_back(std::format(" Twinkle: {}", countEntities<ecs::Visible, ecs::Twinkle>(registry)));
+
+  if (!profiles.empty())
+  {
+    m_lines.emplace_back("Profiles:");
+
+    auto totalMs = 0.f;
+    for (const auto& p : profiles)
+    {
+      m_lines.emplace_back(std::format(" {}: {:.2f}ms", p.name, p.timeMs));
+      totalMs += p.timeMs;
+    }
+    m_lines.emplace_back(std::format(" Total: {:.2f}ms", totalMs));
+  }
 
   m_elapsed    = 0.f;
   m_frameCount = 0;
