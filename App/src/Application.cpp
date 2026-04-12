@@ -13,6 +13,31 @@ using namespace sdl::core;
 using namespace sdl::widgets;
 using namespace app;
 
+namespace
+{
+  SceneConfig buildSceneConfig(const ConfigManager& config)
+  {
+    return {
+        .totalStars        = config.totalStars(),
+        .movingStars       = config.movingStars(),
+        .starMinBrightness = config.starMinBrightness(),
+        .starMaxBrightness = config.starMaxBrightness(),
+        .starMinSpeed      = config.starMinSpeed(),
+        .starMaxSpeed      = config.starMaxSpeed(),
+        .worldWidth        = config.worldWidth(),
+        .worldHeight       = config.worldHeight(),
+        .cameraPanSpeed    = config.cameraPanSpeed(),
+        .cameraZoomSpeed   = config.cameraZoomSpeed(),
+        .cameraZoomMin     = config.cameraZoomMin(),
+        .cameraZoomMax     = config.cameraZoomMax(),
+        .twinklingStars    = config.twinklingStars(),
+        .twinkleMinFreq    = config.twinkleMinFreq(),
+        .twinkleMaxFreq    = config.twinkleMaxFreq(),
+        .twinkleMinAmp     = config.twinkleMinAmp(),
+        .twinkleMaxAmp     = config.twinkleMaxAmp()};
+  }
+}
+
 Application::Application(ConfigManager& configManager)
   : m_context{SDL_INIT_EVENTS | SDL_INIT_VIDEO},
     m_mainWindow{
@@ -20,26 +45,7 @@ Application::Application(ConfigManager& configManager)
         configManager.windowWidth(),
         configManager.windowHeight(),
         convertWindowSettingsToFlags(configManager.windowResizable(), configManager.windowFullscreen())},
-    m_eventLoop{
-        m_mainWindow,
-        SceneConfig{
-            .totalStars        = configManager.totalStars(),
-            .movingStars       = configManager.movingStars(),
-            .starMinBrightness = configManager.starMinBrightness(),
-            .starMaxBrightness = configManager.starMaxBrightness(),
-            .starMinSpeed      = configManager.starMinSpeed(),
-            .starMaxSpeed      = configManager.starMaxSpeed(),
-            .worldWidth        = configManager.worldWidth(),
-            .worldHeight       = configManager.worldHeight(),
-            .cameraPanSpeed    = configManager.cameraPanSpeed(),
-            .cameraZoomSpeed   = configManager.cameraZoomSpeed(),
-            .cameraZoomMin     = configManager.cameraZoomMin(),
-            .cameraZoomMax     = configManager.cameraZoomMax(),
-            .twinklingStars    = configManager.twinklingStars(),
-            .twinkleMinFreq    = configManager.twinkleMinFreq(),
-            .twinkleMaxFreq    = configManager.twinkleMaxFreq(),
-            .twinkleMinAmp     = configManager.twinkleMinAmp(),
-            .twinkleMaxAmp     = configManager.twinkleMaxAmp()}},
+    m_eventLoop{m_mainWindow, buildSceneConfig(configManager), configManager},
     m_configManager{configManager}
 {
 }

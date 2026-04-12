@@ -33,6 +33,15 @@ namespace
     defaults["scene"]["twinkle"]["maxFreq"]     = 3.0f;
     defaults["scene"]["twinkle"]["minAmp"]      = 0.3f;
     defaults["scene"]["twinkle"]["maxAmp"]      = 0.8f;
+    defaults["shortcuts"]["moveUp"]             = 26; // W
+    defaults["shortcuts"]["moveDown"]           = 22; // S
+    defaults["shortcuts"]["moveLeft"]           = 4;  // A
+    defaults["shortcuts"]["moveRight"]          = 7;  // D
+    defaults["shortcuts"]["zoomIn"]             = 8;  // E
+    defaults["shortcuts"]["zoomOut"]            = 20; // Q
+    defaults["shortcuts"]["toggleOverlay"]      = 53; // `
+    defaults["shortcuts"]["toggleMenu"]         = 27; // P
+    defaults["shortcuts"]["toggleFullscreen"]   = 68; // F11
     return defaults;
   }
 
@@ -114,6 +123,25 @@ namespace
         if (twinkle.contains("maxAmp") && !twinkle["maxAmp"].is_number())
           return false;
       }
+      if (config.contains("shortcuts"))
+      {
+        const auto& shortcuts           = config["shortcuts"];
+        static const std::string keys[] = {
+            "moveUp",
+            "moveDown",
+            "moveLeft",
+            "moveRight",
+            "zoomIn",
+            "zoomOut",
+            "toggleOverlay",
+            "toggleMenu",
+            "toggleFullscreen"};
+        for (const auto& key : keys)
+        {
+          if (shortcuts.contains(key) && !shortcuts[key].is_number())
+            return false;
+        }
+      }
     }
 
     return true;
@@ -186,6 +214,11 @@ bool ConfigManager::save() const
     SPDLOG_ERROR("Failed to save config file '{}': {}", m_configPath.string(), e.what());
     return false;
   }
+}
+
+void ConfigManager::resetToDefaults()
+{
+  m_config = defaultConfig();
 }
 
 int ConfigManager::windowWidth() const
@@ -278,6 +311,11 @@ void ConfigManager::setMovingStars(int count)
   m_config["scene"]["stars"]["moving"] = count;
 }
 
+void ConfigManager::setTwinklingStars(int count)
+{
+  m_config["scene"]["twinkle"]["stars"] = count;
+}
+
 void ConfigManager::setWorldWidth(float width)
 {
   m_config["scene"]["worldSize"]["width"] = width;
@@ -286,6 +324,26 @@ void ConfigManager::setWorldWidth(float width)
 void ConfigManager::setWorldHeight(float height)
 {
   m_config["scene"]["worldSize"]["height"] = height;
+}
+
+void ConfigManager::setCameraPanSpeed(float speed)
+{
+  m_config["scene"]["camera"]["panSpeed"] = speed;
+}
+
+void ConfigManager::setCameraZoomSpeed(float speed)
+{
+  m_config["scene"]["camera"]["zoomSpeed"] = speed;
+}
+
+void ConfigManager::setCameraZoomMin(float zoom)
+{
+  m_config["scene"]["camera"]["zoomMin"] = zoom;
+}
+
+void ConfigManager::setCameraZoomMax(float zoom)
+{
+  m_config["scene"]["camera"]["zoomMax"] = zoom;
 }
 
 float ConfigManager::cameraPanSpeed() const
@@ -331,4 +389,94 @@ float ConfigManager::twinkleMinAmp() const
 float ConfigManager::twinkleMaxAmp() const
 {
   return m_config["scene"]["twinkle"]["maxAmp"].get<float>();
+}
+
+int ConfigManager::shortcutMoveUp() const
+{
+  return m_config["shortcuts"]["moveUp"].get<int>();
+}
+
+int ConfigManager::shortcutMoveDown() const
+{
+  return m_config["shortcuts"]["moveDown"].get<int>();
+}
+
+int ConfigManager::shortcutMoveLeft() const
+{
+  return m_config["shortcuts"]["moveLeft"].get<int>();
+}
+
+int ConfigManager::shortcutMoveRight() const
+{
+  return m_config["shortcuts"]["moveRight"].get<int>();
+}
+
+int ConfigManager::shortcutZoomIn() const
+{
+  return m_config["shortcuts"]["zoomIn"].get<int>();
+}
+
+int ConfigManager::shortcutZoomOut() const
+{
+  return m_config["shortcuts"]["zoomOut"].get<int>();
+}
+
+int ConfigManager::shortcutToggleOverlay() const
+{
+  return m_config["shortcuts"]["toggleOverlay"].get<int>();
+}
+
+int ConfigManager::shortcutToggleMenu() const
+{
+  return m_config["shortcuts"]["toggleMenu"].get<int>();
+}
+
+int ConfigManager::shortcutToggleFullscreen() const
+{
+  return m_config["shortcuts"]["toggleFullscreen"].get<int>();
+}
+
+void ConfigManager::setShortcutMoveUp(int scancode)
+{
+  m_config["shortcuts"]["moveUp"] = scancode;
+}
+
+void ConfigManager::setShortcutMoveDown(int scancode)
+{
+  m_config["shortcuts"]["moveDown"] = scancode;
+}
+
+void ConfigManager::setShortcutMoveLeft(int scancode)
+{
+  m_config["shortcuts"]["moveLeft"] = scancode;
+}
+
+void ConfigManager::setShortcutMoveRight(int scancode)
+{
+  m_config["shortcuts"]["moveRight"] = scancode;
+}
+
+void ConfigManager::setShortcutZoomIn(int scancode)
+{
+  m_config["shortcuts"]["zoomIn"] = scancode;
+}
+
+void ConfigManager::setShortcutZoomOut(int scancode)
+{
+  m_config["shortcuts"]["zoomOut"] = scancode;
+}
+
+void ConfigManager::setShortcutToggleOverlay(int scancode)
+{
+  m_config["shortcuts"]["toggleOverlay"] = scancode;
+}
+
+void ConfigManager::setShortcutToggleMenu(int scancode)
+{
+  m_config["shortcuts"]["toggleMenu"] = scancode;
+}
+
+void ConfigManager::setShortcutToggleFullscreen(int scancode)
+{
+  m_config["shortcuts"]["toggleFullscreen"] = scancode;
 }

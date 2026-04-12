@@ -80,6 +80,27 @@ CPMAddPackage(
     VERSION 3.16.0
 )
 
+CPMAddPackage(
+    NAME DearImGui
+    GITHUB_REPOSITORY ocornut/imgui
+    GIT_TAG v1.92.7
+    DOWNLOAD_ONLY YES
+)
+
+if(DearImGui_ADDED)
+    add_library(DearImGui STATIC
+        ${DearImGui_SOURCE_DIR}/imgui.cpp
+        ${DearImGui_SOURCE_DIR}/imgui_demo.cpp
+        ${DearImGui_SOURCE_DIR}/imgui_draw.cpp
+        ${DearImGui_SOURCE_DIR}/imgui_tables.cpp
+        ${DearImGui_SOURCE_DIR}/imgui_widgets.cpp
+        ${DearImGui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
+        ${DearImGui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer3.cpp
+    )
+    target_include_directories(DearImGui PUBLIC ${DearImGui_SOURCE_DIR})
+    target_link_libraries(DearImGui PRIVATE SDL3::SDL3)
+endif()
+
 if(BUILD_TESTS)
     CPMAddPackage(
         NAME GTest

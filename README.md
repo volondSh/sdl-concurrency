@@ -40,7 +40,9 @@ ctest --preset test-linux-clang-release
 - Object-oriented wrappers for SDL3
 - ECS-based rendering with EnTT
 - Configurable application and scene parameters (JSON config)
+- ImGui settings menu with key rebinding
 - FPS overlay with SDL3_ttf and JetBrains Mono font
+- Per-frame profiler with timing breakdown
 - Logging with spdlog
 
 ## Demo: Starfield
@@ -73,19 +75,28 @@ A debug overlay in the top-left corner (toggled with `` ` ``):
 | `W` / `S` | Move camera up / down |
 | `A` / `D` | Move camera left / right |
 | `Q` / `E` | Zoom out / in (0.1x–5x, multiplicative) |
-| `` ` `` | Toggle FPS counter overlay |
+| `` ` `` | Toggle FPS overlay |
 | `F11` | Toggle fullscreen (stars regenerate for new resolution) |
-| `Escape` | Exit |
+| `Escape` | Toggle menu |
 
 ### Architecture
 
-The render pipeline consists of three ECS systems executed each frame:
+The render pipeline consists of four ECS systems executed each frame:
 
 1. **MovementSystem** — updates `Position` based on `Velocity × dt` with world wrapping
 2. **TwinkleSystem** — modulates star brightness via sinusoidal phase
 3. **TransformSystem** — converts `Position + Camera → ScreenPosition` using camera offset and zoom
-4. **CullingSystem** — marks visible entities based on screen bounds (`Visible` tag)
+4. **CullingSystem** — logs which entities are currently visible
 5. **RenderSystem** — draws only `Visible` entities (skipped off-screen stars)
+
+### Settings Menu
+
+Press `Escape` to open the ImGui settings menu:
+
+- **Settings** — sliders for star count, world size, and camera parameters
+  - `Save & Apply` — writes to JSON and regenerates the scene
+  - `Reset to Defaults` — restores original values
+- **Controls** — click a key binding then press any key to rebind
 
 ### Profiling
 
@@ -95,8 +106,6 @@ Each system is wrapped in a `Profiler::Scope` for per-frame timing measurement:
 - `accumulate()` copies and clears per-frame accumulators
 - RAII scope ensures timing is captured even on early returns
 
-- Press `Escape` or close the window to exit
-
 ## Dependencies
 
 Managed automatically via [CPM.cmake](cmake/CPM.cmake):
@@ -105,6 +114,7 @@ Managed automatically via [CPM.cmake](cmake/CPM.cmake):
 |---|---|---|
 | [SDL3](https://github.com/libsdl-org/SDL) | 3.4.4 | Graphics, events, windowing |
 | [SDL3_ttf](https://github.com/libsdl-org/SDL_ttf) | 3.2.2 | Text rendering (FPS overlay) |
+| [Dear ImGui](https://github.com/ocornut/imgui) | 1.92.7 | Settings menu UI |
 | [spdlog](https://github.com/gabime/spdlog) | 1.14.1 | Logging |
 | [EnTT](https://github.com/skypgart/entt) | 3.16.0 | Entity-Component-System |
 | [nlohmann/json](https://github.com/nlohmann/json) | 3.12.0 | JSON configuration |

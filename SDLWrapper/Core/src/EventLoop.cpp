@@ -1,11 +1,15 @@
 #include "EventLoop.hpp"
 
+#include <App/ConfigManager.hpp>
+
 #include <SDLWrapper/Widgets/Window.hpp>
 
 #include <ECS/Components.h>
 #include <ECS/Systems.hpp>
 
 #include <SDL3/SDL.h>
+
+#include <imgui_impl_sdl3.h>
 
 #include <spdlog/spdlog.h>
 
@@ -24,17 +28,59 @@ constexpr auto c_targetDelta = 1.0 / static_cast<double>(c_targetFPS);
 constexpr auto c_msPerSecond = 1000.0;
 constexpr auto c_blackColor  = SDL_Color{.r = 0, .g = 0, .b = 0, .a = 255};
 
-EventLoop::EventLoop(sdl::widgets::Window& window, SceneConfig sceneConfig)
+EventLoop::EventLoop(sdl::widgets::Window& window, SceneConfig sceneConfig, app::ConfigManager& configManager)
   : m_mainWindow{window},
     m_renderer{window},
+    m_imgui{window.nativeHandle(), m_renderer.nativeHandle()},
     m_sceneConfig{sceneConfig},
+    m_configManager{configManager},
     m_textRenderer{m_renderer.nativeHandle(), "resources/fonts/JetBrainsMono-Regular.ttf", 18},
-    m_overlay{m_textRenderer}
+    m_overlay{m_textRenderer},
+    m_menu{configManager}
 {
   m_registry.ctx().emplace<ecs::Camera>(0.f, 0.f, 1.f);
 
   if (!m_textRenderer.valid())
     SPDLOG_WARN("TextRenderer failed to load - FPS overlay disabled");
+
+  m_menu.setOnSave(
+      [this]()
+      {
+        const auto& pending     = m_menu.pending();
+        const auto starsChanged = pending.totalStars != m_sceneConfig.totalStars
+                                  || pending.movingStars != m_sceneConfig.movingStars
+                                  || pending.twinklingStars != m_sceneConfig.twinklingStars;
+        const auto worldChanged =
+            pending.worldWidth != m_sceneConfig.worldWidth || pending.worldHeight != m_sceneConfig.worldHeight;
+        const auto cameraChanged = pending.cameraPanSpeed != m_sceneConfig.cameraPanSpeed
+                                   || pending.cameraZoomSpeed != m_sceneConfig.cameraZoomSpeed
+                                   || pending.cameraZoomMin != m_sceneConfig.cameraZoomMin
+                                   || pending.cameraZoomMax != m_sceneConfig.cameraZoomMax;
+
+        if (!starsChanged && !worldChanged && !cameraChanged)
+        {
+          SPDLOG_INFO("Settings unchanged, skipping save");
+          return;
+        }
+
+        if (!m_configManager.save())
+          SPDLOG_ERROR("Failed to save config");
+
+        m_sceneConfig.totalStars      = m_configManager.totalStars();
+        m_sceneConfig.movingStars     = m_configManager.movingStars();
+        m_sceneConfig.twinklingStars  = m_configManager.twinklingStars();
+        m_sceneConfig.worldWidth      = m_configManager.worldWidth();
+        m_sceneConfig.worldHeight     = m_configManager.worldHeight();
+        m_sceneConfig.cameraPanSpeed  = m_configManager.cameraPanSpeed();
+        m_sceneConfig.cameraZoomSpeed = m_configManager.cameraZoomSpeed();
+        m_sceneConfig.cameraZoomMin   = m_configManager.cameraZoomMin();
+        m_sceneConfig.cameraZoomMax   = m_configManager.cameraZoomMax();
+
+        const auto savedCamera = m_registry.ctx().get<ecs::Camera>();
+        m_registry.clear();
+        m_registry.ctx().emplace<ecs::Camera>(savedCamera.x, savedCamera.y, savedCamera.zoom);
+        createScene();
+      });
 
   createScene();
 }
@@ -87,52 +133,91 @@ void EventLoop::renderScene()
     m_renderer.drawPoint(screen.x, screen.y, color.color);
 }
 
-void EventLoop::handleEvents(bool& running, float deltaTime)
+void EventLoop::processMenuEvents(bool& running, SDL_Event& event)
 {
-  auto event   = SDL_Event{};
-  auto& camera = m_registry.ctx().get<ecs::Camera>();
+  if (event.type == SDL_EVENT_QUIT)
+    running = false;
 
-  while (SDL_PollEvent(&event))
+  if (event.type == SDL_EVENT_KEY_DOWN)
   {
-    if (event.type == SDL_EVENT_QUIT)
-      running = false;
-    if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE)
-      running = false;
-    if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_GRAVE)
-      m_overlay.toggle();
-    if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_F11)
-      m_mainWindow.toggleFullscreen();
-    if (event.type == SDL_EVENT_WINDOW_RESIZED)
+    if (m_menu.capturingField() != sdl::widgets::ShortcutField::None)
     {
-      if (!m_mainWindow.fullscreen())
-        m_mainWindow.updateRestoreSize(event.window.data1, event.window.data2);
-
-      const auto savedCamera = m_registry.ctx().get<ecs::Camera>();
-      m_registry.clear();
-      m_registry.ctx().emplace<ecs::Camera>(savedCamera.x, savedCamera.y, savedCamera.zoom);
-      createScene();
+      if (event.key.scancode == SDL_SCANCODE_ESCAPE)
+        m_menu.cancelCapture();
+      else
+        m_menu.applyCapture(event.key.scancode);
     }
+    else if (event.key.key == SDLK_ESCAPE)
+      m_menu.toggle();
   }
+}
 
-  const auto* pKeys = SDL_GetKeyboardState(nullptr);
-  if (pKeys[SDL_SCANCODE_W])
-    camera.y -= m_sceneConfig.cameraPanSpeed * deltaTime;
-  if (pKeys[SDL_SCANCODE_S])
-    camera.y += m_sceneConfig.cameraPanSpeed * deltaTime;
-  if (pKeys[SDL_SCANCODE_A])
-    camera.x -= m_sceneConfig.cameraPanSpeed * deltaTime;
-  if (pKeys[SDL_SCANCODE_D])
-    camera.x += m_sceneConfig.cameraPanSpeed * deltaTime;
-  if (pKeys[SDL_SCANCODE_Q])
-    camera.zoom = std::clamp(
-        camera.zoom * (1.f / m_sceneConfig.cameraZoomSpeed),
-        m_sceneConfig.cameraZoomMin,
-        m_sceneConfig.cameraZoomMax);
-  if (pKeys[SDL_SCANCODE_E])
+void EventLoop::processApplicationEvents(bool& running, SDL_Event& event)
+{
+  if (event.type == SDL_EVENT_QUIT)
+    running = false;
+  if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE)
+    m_menu.toggle();
+  if (event.type == SDL_EVENT_KEY_DOWN && event.key.scancode == m_configManager.shortcutToggleOverlay())
+    m_overlay.toggle();
+  if (event.type == SDL_EVENT_KEY_DOWN && event.key.scancode == m_configManager.shortcutToggleFullscreen())
+    m_mainWindow.toggleFullscreen();
+  if (event.type == SDL_EVENT_WINDOW_RESIZED)
+    processWindowResize(event);
+}
+
+void EventLoop::processWindowResize(SDL_Event& event)
+{
+  if (!m_mainWindow.fullscreen())
+    m_mainWindow.updateRestoreSize(event.window.data1, event.window.data2);
+
+  const auto savedCamera = m_registry.ctx().get<ecs::Camera>();
+  m_registry.clear();
+  m_registry.ctx().emplace<ecs::Camera>(savedCamera.x, savedCamera.y, savedCamera.zoom);
+  createScene();
+}
+
+void EventLoop::updateCameraInput(ecs::Camera& camera, float deltaTime)
+{
+  const auto* pKeys   = SDL_GetKeyboardState(nullptr);
+  const auto panSpeed = m_sceneConfig.cameraPanSpeed;
+
+  if (pKeys[m_configManager.shortcutMoveUp()])
+    camera.y -= panSpeed * deltaTime;
+  if (pKeys[m_configManager.shortcutMoveDown()])
+    camera.y += panSpeed * deltaTime;
+  if (pKeys[m_configManager.shortcutMoveLeft()])
+    camera.x -= panSpeed * deltaTime;
+  if (pKeys[m_configManager.shortcutMoveRight()])
+    camera.x += panSpeed * deltaTime;
+  if (pKeys[m_configManager.shortcutZoomIn()])
     camera.zoom = std::clamp(
         camera.zoom * m_sceneConfig.cameraZoomSpeed,
         m_sceneConfig.cameraZoomMin,
         m_sceneConfig.cameraZoomMax);
+  if (pKeys[m_configManager.shortcutZoomOut()])
+    camera.zoom = std::clamp(
+        camera.zoom * (1.f / m_sceneConfig.cameraZoomSpeed),
+        m_sceneConfig.cameraZoomMin,
+        m_sceneConfig.cameraZoomMax);
+}
+
+void EventLoop::handleEvents(bool& running, float deltaTime)
+{
+  auto event = SDL_Event{};
+
+  while (SDL_PollEvent(&event))
+  {
+    ImGui_ImplSDL3_ProcessEvent(&event);
+
+    if (m_menu.isOpen())
+      processMenuEvents(running, event);
+    else
+      processApplicationEvents(running, event);
+  }
+
+  if (!m_menu.isOpen())
+    updateCameraInput(m_registry.ctx().get<ecs::Camera>(), deltaTime);
 }
 
 void EventLoop::run()
@@ -167,6 +252,13 @@ void EventLoop::run()
     {
       auto _ = m_profiler.profile("render");
       renderScene();
+    }
+
+    if (m_menu.isOpen())
+    {
+      m_imgui.newFrame();
+      m_menu.render();
+      m_imgui.render();
     }
 
     m_profiler.accumulate();

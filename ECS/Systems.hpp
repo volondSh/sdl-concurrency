@@ -2,8 +2,9 @@
 
 #include <ECS/Components.h>
 
-#include <cmath>
 #include <entt/entt.hpp>
+
+#include <cmath>
 
 namespace ecs
 {
@@ -65,8 +66,9 @@ namespace ecs
     {
       twinkle.phase += twinkle.frequency * dt;
 
-      const auto factor = 0.5f + 0.5f * std::sin(twinkle.phase);
-      const auto bright = static_cast<uint8_t>(color.color.r * (1.0f - twinkle.amplitude + twinkle.amplitude * factor));
+      const auto factor = 0.5f + (0.5f * std::sin(twinkle.phase));
+      const auto bright =
+          static_cast<uint8_t>(color.color.r * (1.0f - twinkle.amplitude + (twinkle.amplitude * factor)));
 
       color.color.r = bright;
       color.color.g = bright;
