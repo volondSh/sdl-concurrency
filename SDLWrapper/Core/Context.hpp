@@ -20,6 +20,5 @@ namespace sdl::core
 
   private:
     bool m_initialized    = false;
-    bool m_ttfInitialized = false;
   };
 }

@@ -4,7 +4,6 @@ add_library(SDLWrapperCore STATIC
     src/ImGuiRenderer.cpp
     src/Profiler.cpp
     src/Renderer.cpp
-    src/TextRenderer.cpp
 )
 
 target_include_directories(SDLWrapperCore
@@ -17,7 +16,6 @@ target_link_libraries(SDLWrapperCore
     PUBLIC
         spdlog::spdlog
         SDL3::SDL3
-        SDL3_ttf::SDL3_ttf
         EnTT::EnTT
         ECS
         DearImGui

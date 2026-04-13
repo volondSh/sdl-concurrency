@@ -9,6 +9,7 @@
 
 #include <SDL3/SDL.h>
 
+#include <imgui.h>
 #include <imgui_impl_sdl3.h>
 
 #include <spdlog/spdlog.h>
@@ -34,14 +35,10 @@ EventLoop::EventLoop(sdl::widgets::Window& window, SceneConfig sceneConfig, app:
     m_imgui{window.nativeHandle(), m_renderer.nativeHandle()},
     m_sceneConfig{sceneConfig},
     m_configManager{configManager},
-    m_textRenderer{m_renderer.nativeHandle(), "resources/fonts/JetBrainsMono-Regular.ttf", 18},
-    m_overlay{m_textRenderer},
+    m_overlay{},
     m_menu{configManager}
 {
   m_registry.ctx().emplace<ecs::Camera>(0.f, 0.f, 1.f);
-
-  if (!m_textRenderer.valid())
-    SPDLOG_WARN("TextRenderer failed to load - FPS overlay disabled");
 
   m_menu.setOnSave(
       [this]()
@@ -254,16 +251,22 @@ void EventLoop::run()
       renderScene();
     }
 
+    m_profiler.accumulate();
+    m_overlay.update(static_cast<float>(deltaTime), m_registry, m_profiler.results());
+
     if (m_menu.isOpen())
     {
       m_imgui.newFrame();
       m_menu.render();
       m_imgui.render();
     }
+    else if (m_overlay.visible())
+    {
+      m_imgui.newFrame();
+      m_overlay.render();
+      m_imgui.render();
+    }
 
-    m_profiler.accumulate();
-    m_overlay.update(static_cast<float>(deltaTime), m_registry, m_profiler.results());
-    m_overlay.render();
     m_renderer.present();
 
     m_profiler.reset();

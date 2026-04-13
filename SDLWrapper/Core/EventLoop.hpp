@@ -3,7 +3,6 @@
 #include "ImGuiRenderer.hpp"
 #include "Profiler.hpp"
 #include "Renderer.hpp"
-#include "TextRenderer.hpp"
 
 #include <SDLWrapper/Widgets/Menu.hpp>
 #include <SDLWrapper/Widgets/Overlay.hpp>
@@ -77,7 +76,6 @@ namespace sdl::core
     entt::registry m_registry;
     SceneConfig m_sceneConfig;
     app::ConfigManager& m_configManager;
-    TextRenderer m_textRenderer;
     sdl::widgets::Overlay m_overlay;
     sdl::widgets::Menu m_menu;
     Profiler m_profiler;

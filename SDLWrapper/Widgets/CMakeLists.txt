@@ -14,8 +14,8 @@ target_link_libraries(SDLWrapperWidgets
     PUBLIC
         spdlog::spdlog
         SDL3::SDL3
-        SDL3_ttf::SDL3_ttf
         nlohmann_json::nlohmann_json
+        DearImGui
     PRIVATE
         SDLWrapperCore
 )

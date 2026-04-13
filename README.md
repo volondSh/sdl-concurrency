@@ -41,7 +41,7 @@ ctest --preset test-linux-clang-release
 - ECS-based rendering with EnTT
 - Configurable application and scene parameters (JSON config)
 - ImGui settings menu with key rebinding
-- FPS overlay with SDL3_ttf and JetBrains Mono font
+- FPS overlay with graph mode
 - Per-frame profiler with timing breakdown
 - Logging with spdlog
 
@@ -59,14 +59,10 @@ The current demo renders stars as monochrome points on a black background at 60 
 
 A debug overlay in the top-left corner (toggled with `` ` ``):
 
-- Green monospace text via SDL3_ttf with JetBrains Mono
-- **FPS** — frames per second
-- **Entities** — total `Position` entities
-- **Moving** — entities with `Velocity` component
-- **Twinkle** — entities with `Twinkle` component
-- **Visible** — entities currently on screen, broken down by `Moving` and `Twinkle`
-- **Per-system timing** — movement, twinkle, transform, culling, render + total
-- Updates once per second with averaged values
+- **First press** — text mode: FPS, entity counts, per-system timing
+- **Second press** — graph mode: 120-frame FPS history chart + text metrics below
+- **Third press** — hidden
+- Fully rendered via ImGui
 
 ### Controls
 
@@ -113,16 +109,11 @@ Managed automatically via [CPM.cmake](cmake/CPM.cmake):
 | Library | Version | Purpose |
 |---|---|---|
 | [SDL3](https://github.com/libsdl-org/SDL) | 3.4.4 | Graphics, events, windowing |
-| [SDL3_ttf](https://github.com/libsdl-org/SDL_ttf) | 3.2.2 | Text rendering (FPS overlay) |
-| [Dear ImGui](https://github.com/ocornut/imgui) | 1.92.7 | Settings menu UI |
+| [Dear ImGui](https://github.com/ocornut/imgui) | 1.92.7 | Settings menu and Overlay UI |
 | [spdlog](https://github.com/gabime/spdlog) | 1.14.1 | Logging |
 | [EnTT](https://github.com/skypgart/entt) | 3.16.0 | Entity-Component-System |
 | [nlohmann/json](https://github.com/nlohmann/json) | 3.12.0 | JSON configuration |
 | [GoogleTest](https://github.com/google/googletest) | 1.17.0 | Unit testing |
-
-### Fonts
-
-The FPS overlay uses **JetBrains Mono** (OFL 1.1 license), bundled in `resources/fonts/`. No manual setup required.
 
 ### Build-time options
 
