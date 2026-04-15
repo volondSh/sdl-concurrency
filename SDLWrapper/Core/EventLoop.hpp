@@ -62,6 +62,7 @@ namespace sdl::core
 
   private:
     void createScene();
+    void syncRegistries();
     void renderScene();
 
     void handleEvents(bool& running, float deltaTime);
@@ -73,7 +74,10 @@ namespace sdl::core
     sdl::widgets::Window& m_mainWindow;
     Renderer m_renderer;
     ImGuiRenderer m_imgui;
-    entt::registry m_registry;
+    entt::registry m_logicRegistry;
+    entt::registry m_renderRegistry;
+    std::vector<entt::entity> m_logicEntities;
+    std::vector<entt::entity> m_renderEntities;
     SceneConfig m_sceneConfig;
     app::ConfigManager& m_configManager;
     sdl::widgets::Overlay m_overlay;

@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <filesystem>
 #include <numbers>
 #include <random>
 
@@ -38,7 +37,8 @@ EventLoop::EventLoop(sdl::widgets::Window& window, SceneConfig sceneConfig, app:
     m_overlay{},
     m_menu{configManager}
 {
-  m_registry.ctx().emplace<ecs::Camera>(0.f, 0.f, 1.f);
+  m_logicRegistry.ctx().emplace<ecs::Camera>(0.f, 0.f, 1.f);
+  m_renderRegistry.ctx().emplace<ecs::Camera>(0.f, 0.f, 1.f);
 
   m_menu.setOnSave(
       [this]()
@@ -73,9 +73,11 @@ EventLoop::EventLoop(sdl::widgets::Window& window, SceneConfig sceneConfig, app:
         m_sceneConfig.cameraZoomMin   = m_configManager.cameraZoomMin();
         m_sceneConfig.cameraZoomMax   = m_configManager.cameraZoomMax();
 
-        const auto savedCamera = m_registry.ctx().get<ecs::Camera>();
-        m_registry.clear();
-        m_registry.ctx().emplace<ecs::Camera>(savedCamera.x, savedCamera.y, savedCamera.zoom);
+        const auto savedCamera = m_logicRegistry.ctx().get<ecs::Camera>();
+        m_logicRegistry.clear();
+        m_renderRegistry.clear();
+        m_logicRegistry.ctx().emplace<ecs::Camera>(savedCamera.x, savedCamera.y, savedCamera.zoom);
+        m_renderRegistry.ctx().emplace<ecs::Camera>(savedCamera.x, savedCamera.y, savedCamera.zoom);
         createScene();
       });
 
@@ -86,38 +88,83 @@ EventLoop::~EventLoop() = default;
 
 void EventLoop::createScene()
 {
+  m_logicEntities.clear();
+  m_renderEntities.clear();
+
+  m_logicEntities.reserve(m_sceneConfig.totalStars);
+  m_renderEntities.reserve(m_sceneConfig.totalStars);
+
   const auto worldWidth  = m_sceneConfig.worldWidth;
   const auto worldHeight = m_sceneConfig.worldHeight;
-  auto randomEngine      = std::mt19937(std::random_device{}());
-  auto starPositionX     = std::uniform_real_distribution<float>(-worldWidth * 0.5f, worldWidth * 0.5f);
-  auto starPositionY     = std::uniform_real_distribution<float>(-worldHeight * 0.5f, worldHeight * 0.5f);
-  auto starBrightness =
-      std::uniform_int_distribution<int>(m_sceneConfig.starMinBrightness, m_sceneConfig.starMaxBrightness);
-  auto starSpeed    = std::uniform_real_distribution<float>(m_sceneConfig.starMinSpeed, m_sceneConfig.starMaxSpeed);
-  auto starAngle    = std::uniform_real_distribution<float>(0.f, 2.f * std::numbers::pi_v<float>);
-  auto twinkleFreq  = std::uniform_real_distribution<float>(m_sceneConfig.twinkleMinFreq, m_sceneConfig.twinkleMaxFreq);
-  auto twinkleAmp   = std::uniform_real_distribution<float>(m_sceneConfig.twinkleMinAmp, m_sceneConfig.twinkleMaxAmp);
-  auto twinklePhase = std::uniform_real_distribution<float>(0.f, 6.2832f);
 
-  for (unsigned int i = 0; i < static_cast<unsigned int>(m_sceneConfig.totalStars); ++i)
+  auto rng = std::mt19937(std::random_device{}());
+
+  std::uniform_real_distribution<float> posX(-worldWidth * 0.5f, worldWidth * 0.5f);
+  std::uniform_real_distribution<float> posY(-worldHeight * 0.5f, worldHeight * 0.5f);
+  std::uniform_int_distribution<int> brightnessDist(m_sceneConfig.starMinBrightness, m_sceneConfig.starMaxBrightness);
+
+  std::uniform_real_distribution<float> speedDist(m_sceneConfig.starMinSpeed, m_sceneConfig.starMaxSpeed);
+
+  std::uniform_real_distribution<float> angleDist(0.f, 2.f * std::numbers::pi_v<float>);
+  std::uniform_real_distribution<float> twFreq(m_sceneConfig.twinkleMinFreq, m_sceneConfig.twinkleMaxFreq);
+  std::uniform_real_distribution<float> twAmp(m_sceneConfig.twinkleMinAmp, m_sceneConfig.twinkleMaxAmp);
+  std::uniform_real_distribution<float> twPhase(0.f, 6.2832f);
+
+  for (uint32_t i = 0; i < m_sceneConfig.totalStars; ++i)
   {
-    const auto star = m_registry.create();
-    m_registry.emplace<ecs::Position>(star, starPositionX(randomEngine), starPositionY(randomEngine));
-    m_registry.emplace<ecs::ScreenPosition>(star);
-    m_registry.emplace<ecs::Visible>(star);
-    const auto brightness = static_cast<uint8_t>(starBrightness(randomEngine));
-    m_registry.emplace<ecs::Color>(star, SDL_Color{.r = brightness, .g = brightness, .b = brightness, .a = 255});
+    // --- Logic entity ---
+    auto le = m_logicRegistry.create();
+    m_logicEntities.push_back(le);
 
-    if (i < static_cast<unsigned int>(m_sceneConfig.movingStars))
+    m_logicRegistry.emplace<ecs::Position>(le, posX(rng), posY(rng));
+
+    const auto brightness = static_cast<uint8_t>(brightnessDist(rng));
+    m_logicRegistry.emplace<ecs::Color>(le, SDL_Color{brightness, brightness, brightness, 255});
+
+    if (i < m_sceneConfig.movingStars)
     {
-      const auto speed = starSpeed(randomEngine);
-      const auto angle = starAngle(randomEngine);
-      m_registry.emplace<ecs::Velocity>(star, std::cos(angle) * speed, std::sin(angle) * speed);
+      const auto speed = speedDist(rng);
+      const auto angle = angleDist(rng);
+      m_logicRegistry.emplace<ecs::Velocity>(le, std::cos(angle) * speed, std::sin(angle) * speed);
     }
 
-    if (i < static_cast<unsigned int>(m_sceneConfig.twinklingStars))
-      m_registry
-          .emplace<ecs::Twinkle>(star, twinklePhase(randomEngine), twinkleFreq(randomEngine), twinkleAmp(randomEngine));
+    if (i < m_sceneConfig.twinklingStars)
+    {
+      m_logicRegistry.emplace<ecs::Twinkle>(le, twPhase(rng), twFreq(rng), twAmp(rng));
+    }
+
+    // --- Render entity ---
+    auto re = m_renderRegistry.create();
+    m_renderEntities.push_back(re);
+
+    m_renderRegistry.emplace<ecs::Position>(re);
+    m_renderRegistry.emplace<ecs::ScreenPosition>(re);
+    m_renderRegistry.emplace<ecs::Visible>(re);
+    m_renderRegistry.emplace<ecs::Color>(re);
+  }
+}
+
+void EventLoop::syncRegistries()
+{
+  // Camera
+  m_renderRegistry.ctx().emplace<ecs::Camera>(m_logicRegistry.ctx().get<ecs::Camera>());
+
+  const size_t count = m_logicEntities.size();
+
+  for (size_t i = 0; i < count; ++i)
+  {
+    const auto le = m_logicEntities[i];
+    const auto re = m_renderEntities[i];
+
+    // Position
+    const auto& srcPos = m_logicRegistry.get<ecs::Position>(le);
+    auto& dstPos       = m_renderRegistry.get<ecs::Position>(re);
+    dstPos             = srcPos;
+
+    // Color
+    const auto& srcColor = m_logicRegistry.get<ecs::Color>(le);
+    auto& dstColor       = m_renderRegistry.get<ecs::Color>(re);
+    dstColor             = srcColor;
   }
 }
 
@@ -125,7 +172,7 @@ void EventLoop::renderScene()
 {
   m_renderer.clearWithColor(c_blackColor);
 
-  const auto view = m_registry.view<ecs::Visible, ecs::ScreenPosition, ecs::Color>();
+  const auto view = m_renderRegistry.view<ecs::Visible, ecs::ScreenPosition, ecs::Color>();
   for (const auto& [_, screen, color] : view.each())
     m_renderer.drawPoint(screen.x, screen.y, color.color);
 }
@@ -168,9 +215,11 @@ void EventLoop::processWindowResize(SDL_Event& event)
   if (!m_mainWindow.fullscreen())
     m_mainWindow.updateRestoreSize(event.window.data1, event.window.data2);
 
-  const auto savedCamera = m_registry.ctx().get<ecs::Camera>();
-  m_registry.clear();
-  m_registry.ctx().emplace<ecs::Camera>(savedCamera.x, savedCamera.y, savedCamera.zoom);
+  const auto& savedCamera = m_logicRegistry.ctx().get<ecs::Camera>();
+  m_logicRegistry.clear();
+  m_renderRegistry.clear();
+  m_logicRegistry.ctx().emplace<ecs::Camera>(savedCamera.x, savedCamera.y, savedCamera.zoom);
+  m_renderRegistry.ctx().emplace<ecs::Camera>(savedCamera.x, savedCamera.y, savedCamera.zoom);
   createScene();
 }
 
@@ -214,7 +263,7 @@ void EventLoop::handleEvents(bool& running, float deltaTime)
   }
 
   if (!m_menu.isOpen())
-    updateCameraInput(m_registry.ctx().get<ecs::Camera>(), deltaTime);
+    updateCameraInput(m_logicRegistry.ctx().get<ecs::Camera>(), deltaTime);
 }
 
 void EventLoop::run()
@@ -230,21 +279,38 @@ void EventLoop::run()
 
     handleEvents(running, static_cast<float>(deltaTime));
 
+    // Logic Phase
     {
       auto _ = m_profiler.profile("movement");
-      movementSystem(m_registry, static_cast<float>(deltaTime), m_sceneConfig.worldWidth, m_sceneConfig.worldHeight);
+      movementSystem(
+          m_logicRegistry,
+          static_cast<float>(deltaTime),
+          m_sceneConfig.worldWidth,
+          m_sceneConfig.worldHeight);
     }
     {
       auto _ = m_profiler.profile("twinkle");
-      twinkleSystem(m_registry, static_cast<float>(deltaTime));
+      twinkleSystem(m_logicRegistry, static_cast<float>(deltaTime));
     }
+
+    // Sync Phase
+    {
+      auto _ = m_profiler.profile("sync");
+      syncRegistries();
+    }
+
+    // Render Phase
     {
       auto _ = m_profiler.profile("transform");
-      transformSystem(m_registry, m_registry.ctx().get<Camera>(), m_mainWindow.width(), m_mainWindow.height());
+      transformSystem(
+          m_renderRegistry,
+          m_logicRegistry.ctx().get<ecs::Camera>(),
+          m_mainWindow.width(),
+          m_mainWindow.height());
     }
     {
       auto _ = m_profiler.profile("culling");
-      cullingSystem(m_registry, m_mainWindow.width(), m_mainWindow.height());
+      cullingSystem(m_renderRegistry, m_mainWindow.width(), m_mainWindow.height());
     }
     {
       auto _ = m_profiler.profile("render");
@@ -252,7 +318,7 @@ void EventLoop::run()
     }
 
     m_profiler.accumulate();
-    m_overlay.update(static_cast<float>(deltaTime), m_registry, m_profiler.results());
+    m_overlay.update(static_cast<float>(deltaTime), m_renderRegistry, m_profiler.results());
 
     if (m_menu.isOpen())
     {

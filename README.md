@@ -77,13 +77,13 @@ A debug overlay in the top-left corner (toggled with `` ` ``):
 
 ### Architecture
 
-The render pipeline consists of four ECS systems executed each frame:
+The engine uses a **double-buffered ECS architecture** to prepare for multithreading:
 
-1. **MovementSystem** — updates `Position` based on `Velocity × dt` with world wrapping
-2. **TwinkleSystem** — modulates star brightness via sinusoidal phase
-3. **TransformSystem** — converts `Position + Camera → ScreenPosition` using camera offset and zoom
-4. **CullingSystem** — logs which entities are currently visible
-5. **RenderSystem** — draws only `Visible` entities (skipped off-screen stars)
+- **Logic Registry**: Updates `Position` based on `Velocity` and `Twinkle` phase (Logic Phase)
+- **Sync Phase**: Copies `Position` and `Camera` from Logic to Render Registry
+- **Render Registry**: Handles `TransformSystem`, `CullingSystem`, and `RenderSystem` (Render Phase)
+
+This separation ensures that logic calculations and rendering can eventually run in parallel threads without data races.
 
 ### Settings Menu
 
